@@ -1,0 +1,41 @@
+# Basic
+quarkus.application.name=pivo-cloud
+quarkus.http.port=8080
+quarkus.index-dependency.common.group-id=app.pivo
+quarkus.index-dependency.common.artifact-id=common
+# Security
+ quarkus.http.auth.proactive=false
+quarkus.http.auth.permission.private.paths=/cl/cloud/*
+quarkus.http.auth.permission.private.policy=authenticated
+# quarkus.http.auth.policy.private.roles-allowed=user
+# quarkus.http.auth.policy.admin.roles-allowed=admin
+# quarkus.http.auth.permission.private.paths=/aun/authn/*
+# quarkus.http.auth.permission.private.policy=private
+# quarkus.http.auth.permission.admin.paths=/aun/a/authn/*
+# quarkus.http.auth.permission.admin.policy=admin
+# quarkus.http.auth.permission.public.paths=/aun/p/authn/*
+# quarkus.http.auth.permission.public.policy=permit
+mp.jwt.verify.issuer=api
+mp.jwt.token.header=Authorization
+mp.jwt.verify.publickey.location=keys/public.pem
+smallrye.jwt.claims.sub=email
+smallrye.jwt.token.schemes=''
+# Resource
+quarkus.native.resources.includes=keys/public.pem
+# JDBC
+quarkus.mongodb.connection-string=mongodb://<username>:<password>@localhost:27017/<database>
+# Common
+quarkus.jackson.write-dates-as-timestamps=false
+
+## Custom
+aws.s3.buckets.us=us.cloud.pivo.dev
+aws.s3.buckets.eu=eu.cloud.pivo.dev
+aws.s3.fallbackBucket=us.cloud.pivo.dev
+
+### Rest Client
+geo-ip/mp-rest/url=https://api.ipgeolocation.io
+geo-ip/mp-rest/scope=javax.inject.Singleton
+geoip.api-key=
+
+### Redis
+quarkus.redis.hosts=redis://localhost:6379

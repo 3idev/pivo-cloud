@@ -1,0 +1,66 @@
+allprojects {
+    group 'app.pivo'
+    version '1.0-SNAPSHOT'
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven{
+            url "https://nexus.bedatadriven.com/content/groups/public"
+        }
+    }
+
+    apply plugin: 'java'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    compileJava {
+        options.encoding = 'UTF-8'
+        options.compilerArgs << '-parameters'
+    }
+
+    compileTestJava {
+        options.encoding = 'UTF-8'
+    }
+
+    dependencies {
+        // --- AWS ---
+        implementation platform('software.amazon.awssdk:bom:2.16.29')
+
+        implementation 'software.amazon.awssdk:s3'
+        implementation 'software.amazon.awssdk:s3control'
+        implementation 'software.amazon.awssdk:kms'
+        // --- AWS END ---
+
+        implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+//        implementation 'io.quarkus:quarkus-smallrye-jwt'
+//        implementation 'io.quarkus:quarkus-smallrye-jwt-build'
+        implementation 'io.quarkus:quarkus-hibernate-validator'
+        implementation 'io.quarkus:quarkus-resteasy'
+        implementation 'io.quarkus:quarkus-resteasy-jackson'
+        implementation 'io.quarkus:quarkus-security'
+        implementation 'io.quarkus:quarkus-arc'
+        implementation 'org.mindrot.bcrypt:bcrypt:0.3'
+        implementation 'io.quarkus:quarkus-rest-client'
+        implementation 'io.quarkus:quarkus-rest-client-jackson'
+        implementation 'io.quarkus:quarkus-redis-client'
+
+        testImplementation 'io.quarkus:quarkus-junit5'
+        compileOnly 'org.projectlombok:lombok:1.18.20'
+        annotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+        testCompileOnly 'org.projectlombok:lombok:1.18.20'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
+    }
+}
+
+project(':cloud') {
+    dependencies {
+        implementation project(':common')
+    }
+}

@@ -1,0 +1,3 @@
+src/main/resources/keys/*.pem
+src/main/resources/*.properties
+!src/main/resources/*.properties.tmpl
