@@ -166,7 +166,7 @@ gradle-app.setting
 
 .DS_Store
 
-cloud/src/bin
-cloud/src/build
-common/src/bin
-common/src/build
+cloud/bin
+cloud/build
+common/bin
+common/build
