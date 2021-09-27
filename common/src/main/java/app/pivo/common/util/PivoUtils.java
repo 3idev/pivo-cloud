@@ -1,5 +1,6 @@
 package app.pivo.common.util;
 
+import app.pivo.common.define.UserLocation;
 import app.pivo.common.util.aws.AWSProperty;
 import software.amazon.awssdk.regions.Region;
 
@@ -22,11 +23,11 @@ public class PivoUtils {
         }
     }
 
-    public String locationToBucket(String location) {
+    public String locationToBucket(UserLocation location) {
         switch (location) {
-            case "US":
+            case US:
                 return property.buckets().get("us");
-            case "EU":
+            case EU:
                 return property.buckets().get("eu");
             default:
                 return property.fallbackBucket();

@@ -3,14 +3,13 @@ package app.pivo.common.security;
 import app.pivo.common.define.ApiErrorCode;
 import app.pivo.common.define.RedisPrefix;
 import app.pivo.common.entity.User;
-import app.pivo.common.exception.ApiException;
 import app.pivo.common.repository.RedisRepository;
 import app.pivo.common.response.ApiErrorResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.redis.client.Response;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -23,12 +22,10 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 import java.util.List;
 
+@Slf4j
 @Provider
 @Priority(Priorities.AUTHORIZATION)
 public class PivoAuthorizationFilter implements ContainerRequestFilter {
-
-    @Inject
-    Logger log;
 
     @Inject
     RedisRepository redis;
@@ -54,7 +51,7 @@ public class PivoAuthorizationFilter implements ContainerRequestFilter {
         final String method = ctx.getMethod();
         final String current = method + path;
 
-        log.debugf("path: %s, method: %s", path, method);
+        log.debug("path: {}, method: {}", path, method);
         if (!method.equalsIgnoreCase("OPTIONS")) {
             User user = (User) securityContext.getUserPrincipal();
             try {
@@ -72,7 +69,7 @@ public class PivoAuthorizationFilter implements ContainerRequestFilter {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                log.errorf("error: %s", e.getMessage());
+                log.error("error: {}", e.getMessage());
                 ctx.abortWith(javax.ws.rs.core.Response.status(500).entity(this.UNKNOWN).build());
             }
         }

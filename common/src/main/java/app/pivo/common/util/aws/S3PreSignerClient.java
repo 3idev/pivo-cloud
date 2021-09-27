@@ -5,10 +5,9 @@ import app.pivo.common.domain.PreSignedURL;
 import app.pivo.common.domain.URLWithTTL;
 import app.pivo.common.entity.User;
 import app.pivo.common.repository.RedisRepository;
-import app.pivo.common.service.token.TokenService;
 import app.pivo.common.util.PivoUtils;
 import io.vertx.redis.client.Response;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -21,14 +20,12 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.time.Duration;
 
+@Slf4j
 @ApplicationScoped
 public class S3PreSignerClient {
 
     @Inject
     RedisRepository redis;
-
-    @Inject
-    Logger log;
 
     @Inject
     PivoUtils utils;
@@ -47,7 +44,7 @@ public class S3PreSignerClient {
     }
 
     public PreSignedURL generatePreSignedURL(String key, String bucketName) {
-        log.infof("bucket name: %s", bucketName);
+        log.debug("bucket name: {}", bucketName);
         try (S3Presigner client = S3Presigner.builder().region(utils.getRegionFromBucket(bucketName)).build()) {
             URLWithTTL get = this.generateGetPreSignedURL(client, key, bucketName);
             URLWithTTL put = this.generatePutPreSignedURL(client, key, bucketName);
@@ -64,7 +61,7 @@ public class S3PreSignerClient {
         Response result = redis.get(RedisPrefix.S3_PUT.getName(key, bucketName));
         if (null != result) {
             try {
-                log.info("Found put url from redis!");
+                log.debug("Found put url from redis!");
                 long ttl = redis.ttl(RedisPrefix.S3_PUT.getName(key, bucketName));
                 if (ttl > this.EXPIRE_TTL) {
                     return URLWithTTL.builder()
@@ -72,6 +69,7 @@ public class S3PreSignerClient {
                             .ttl(ttl)
                             .build();
                 }
+                log.debug("TTL is almost expire, generate new one");
             } catch (Exception ignore) {
             }
         }
@@ -88,7 +86,7 @@ public class S3PreSignerClient {
         PresignedPutObjectRequest presignedRequest = client.presignPutObject(presignRequest);
         String url = presignedRequest.url().toString();
 
-        log.infof("put url: %s", url);
+        log.debug("put url: {}", url);
 
         redis.setWithExpire(RedisPrefix.S3_PUT.getName(key, bucketName), url, 1800L);
 
@@ -102,7 +100,7 @@ public class S3PreSignerClient {
         Response result = redis.get(RedisPrefix.S3_GET.getName(key, bucketName));
         if (null != result) {
             try {
-                log.info("Found get url from redis!");
+                log.debug("Found get url from redis!");
                 long ttl = redis.ttl(RedisPrefix.S3_GET.getName(key, bucketName));
                 if (ttl > this.EXPIRE_TTL) {
                     return URLWithTTL.builder()
@@ -110,6 +108,7 @@ public class S3PreSignerClient {
                             .ttl(ttl)
                             .build();
                 }
+                log.debug("TTL is almost expire, generate new one");
             } catch (Exception ignore) {
             }
         }
@@ -126,7 +125,7 @@ public class S3PreSignerClient {
         PresignedGetObjectRequest presignedRequest = client.presignGetObject(presignRequest);
         String url = presignedRequest.url().toString();
 
-        log.infof("get url: %s", url);
+        log.debug("get url: {}", url);
 
         redis.setWithExpire(RedisPrefix.S3_GET.getName(key, bucketName), url, 1800L);
 

@@ -1,19 +1,16 @@
 package app.pivo.common.filter;
 
 import io.vertx.core.http.HttpServerRequest;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
-import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
+@Slf4j
 @Provider
 public class LoggingFilter implements ContainerRequestFilter {
-
-    @Inject
-    Logger logger;
 
     @Context
     HttpServerRequest request;
@@ -24,7 +21,7 @@ public class LoggingFilter implements ContainerRequestFilter {
         final String method = ctx.getMethod();
         final String address = request.remoteAddress().toString();
 
-        logger.infof("<-- %s request %s %s", address, method, uri);
+        log.info("<-- {} request {} {}", address, method, uri);
     }
 
 }

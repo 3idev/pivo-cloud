@@ -4,18 +4,12 @@ import app.pivo.common.define.ApiErrorCode;
 import app.pivo.common.response.ApiErrorResponse;
 import io.quarkus.security.UnauthorizedException;
 
-import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import org.jboss.logging.Logger;
-
 @Provider
 public class UnauthorizedExceptionHandler implements ExceptionMapper<UnauthorizedException> {
-
-    @Inject
-    Logger log;
 
     private final ApiErrorCode code = ApiErrorCode.NOT_AUTHORIZED;
 

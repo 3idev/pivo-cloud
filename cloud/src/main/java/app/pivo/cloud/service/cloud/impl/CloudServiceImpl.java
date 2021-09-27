@@ -1,23 +1,22 @@
 package app.pivo.cloud.service.cloud.impl;
 
-import app.pivo.common.domain.PreSignedURL;
 import app.pivo.cloud.service.amazon.AmazonService;
 import app.pivo.cloud.service.cloud.CloudService;
-import app.pivo.common.service.geoip.GeoIPService;
+import app.pivo.common.define.UserLocation;
+import app.pivo.common.domain.PreSignedURL;
 import app.pivo.common.entity.User;
+import app.pivo.common.service.geoip.GeoIPService;
+import app.pivo.common.util.IPUtils;
 import app.pivo.common.util.PivoUtils;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.client.exception.ResteasyWebApplicationException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.UUID;
 
+@Slf4j
 @ApplicationScoped
 public class CloudServiceImpl implements CloudService {
-
-    @Inject
-    Logger log;
 
     @Inject
     GeoIPService geoIPService;
@@ -30,22 +29,23 @@ public class CloudServiceImpl implements CloudService {
 
     @Override
     public PreSignedURL createCognitoURL(User user, String ip) throws Exception {
-        log.infof("ip is %s", formatIP(ip));
+        String formatIP = IPUtils.formatIP(ip);
+        log.debug("ip is {}", formatIP);
 
-        String location = "US";
+        UserLocation location = UserLocation.US;
         try {
-            boolean isEU = geoIPService.getLocation(formatIP(ip)).getIs_eu();
-            log.infof("is eu?: %b", isEU);
+            boolean isEU = geoIPService.getLocation(formatIP).getIs_eu();
+            log.debug("is eu?: {}", isEU);
             if (isEU) {
-                location = "EU";
+                location = UserLocation.EU;
             }
         } catch (ResteasyWebApplicationException e) {
-            log.error("failed to get location from ip");
+            log.error("failed to get location from ip", e);
         }
 
         boolean isExists = amazonService.checkObject(user, utils.locationToBucket(location));
         if (!isExists) {
-            log.infof("initialize user resource");
+            log.debug("initialize user resource");
             amazonService.initializeUserResource(user, utils.locationToBucket(location));
         }
 
@@ -53,16 +53,19 @@ public class CloudServiceImpl implements CloudService {
     }
 
     @Override
-    public boolean deleteObject(User user, String path) {
+    public boolean softDeleteObject(User user, String path) throws Exception {
+        // TODO: Separate deleteObject method
+        amazonService.deleteObject(user, path);
+
         return true;
     }
 
-    private String formatIP(String ip) {
-        if (ip.contains(":")) {
-            return ip.split(":")[0];
-        }
+    @Override
+    public boolean hardDeleteObject(User user, String path) throws Exception {
+        // TODO: Separate deleteObject method
+        amazonService.deleteObject(user, path);
 
-        return ip;
+        return true;
     }
 
 }

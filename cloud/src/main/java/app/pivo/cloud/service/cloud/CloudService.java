@@ -7,6 +7,8 @@ public interface CloudService {
 
     PreSignedURL createCognitoURL(User user, String ip) throws Exception;
 
-    boolean deleteObject(User user, String path) throws Exception;
+    boolean softDeleteObject(User user, String path) throws Exception;
+
+    boolean hardDeleteObject(User user, String path) throws Exception;
 
 }

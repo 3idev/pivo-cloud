@@ -5,23 +5,16 @@ import app.pivo.common.service.token.TokenService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import org.bouncycastle.util.io.pem.PemReader;
-import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.io.*;
+import java.io.InputStream;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class JWTServiceImpl implements TokenService {
-
-    @Inject
-    Logger log;
 
     private RSAPublicKey publicKey;
 

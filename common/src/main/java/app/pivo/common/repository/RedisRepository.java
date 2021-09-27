@@ -3,21 +3,19 @@ package app.pivo.common.repository;
 import app.pivo.common.define.RedisPrefix;
 import io.quarkus.redis.client.RedisClient;
 import io.vertx.redis.client.Response;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 @ApplicationScoped
 public class RedisRepository {
 
     @Inject
     RedisClient redis;
-
-    @Inject
-    Logger log;
 
     // GET
     public Response get(RedisPrefix prefix, String key) {
@@ -43,7 +41,7 @@ public class RedisRepository {
             val = value.toString();
             return redis.set(Arrays.asList(key, val));
         } catch (NoSuchMethodError e) {
-            log.errorf("%s class doesn't have toString method", value.getClass().getName());
+            log.error("{} class doesn't have toString method", value.getClass().getName());
             throw new NoSuchMethodException(e.getMessage());
         }
     }

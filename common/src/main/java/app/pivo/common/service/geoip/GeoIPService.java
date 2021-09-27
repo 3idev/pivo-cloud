@@ -2,7 +2,7 @@ package app.pivo.common.service.geoip;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.jboss.logging.Logger;
+import org.jboss.resteasy.client.exception.ResteasyWebApplicationException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -17,10 +17,7 @@ public class GeoIPService {
     @RestClient
     GeoIP geoIP;
 
-    @Inject
-    Logger log;
-
-    public GeoIPResponse getLocation(String ip) {
+    public GeoIPResponse getLocation(String ip) throws ResteasyWebApplicationException {
         if (ip.equalsIgnoreCase("127.0.0.1")) {
             return GeoIPResponse.builder()
                     .continent_code("US")

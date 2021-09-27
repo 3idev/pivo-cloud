@@ -12,7 +12,7 @@ public class IPUtils {
 
     public static String getRemoteIP(HttpServerRequest request) {
         MultiMap map = request.headers();
-        for (String header: IP_HEADERS) {
+        for (String header : IP_HEADERS) {
             if (map.contains(header)) {
                 return map.get(header);
             }
@@ -20,4 +20,11 @@ public class IPUtils {
         return request.remoteAddress().toString();
     }
 
+    public static String formatIP(String ip) {
+        if (ip.contains(":")) {
+            return ip.split(":")[0];
+        }
+
+        return ip;
+    }
 }
