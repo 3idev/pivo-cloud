@@ -1,11 +1,10 @@
 package app.pivo.common.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
-
-import java.io.Serializable;
+import lombok.ToString;
 
 import javax.ws.rs.core.Response;
+import java.io.Serializable;
 
 @ToString
 public class ApiResponse implements Serializable {
@@ -14,7 +13,7 @@ public class ApiResponse implements Serializable {
 
     @JsonProperty("isOk")
     private final boolean isOk = true;
-    private Object data;
+    private final Object data;
 
     ApiResponse(Object data) {
         this.data = data;

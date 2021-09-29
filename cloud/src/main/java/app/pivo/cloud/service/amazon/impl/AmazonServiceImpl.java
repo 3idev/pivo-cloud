@@ -1,9 +1,11 @@
 package app.pivo.cloud.service.amazon.impl;
 
 import app.pivo.cloud.service.amazon.AmazonService;
+import app.pivo.common.define.S3Bucket;
 import app.pivo.common.domain.PreSignedURL;
 import app.pivo.common.entity.User;
 import app.pivo.common.util.aws.AWSProperty;
+import app.pivo.common.util.aws.Cognito;
 import app.pivo.common.util.aws.S3;
 import app.pivo.common.util.aws.S3PreSignerClient;
 import io.smallrye.mutiny.Uni;
@@ -14,11 +16,15 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.regex.Pattern;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ApplicationScoped
 public class AmazonServiceImpl implements AmazonService {
+
+    @Inject
+    AWSProperty aws;
 
     @Inject
     S3 s3;
@@ -27,7 +33,7 @@ public class AmazonServiceImpl implements AmazonService {
     S3PreSignerClient presignedClient;
 
     @Inject
-    AWSProperty aws;
+    Cognito cognito;
 
     @Override
     public boolean checkObject(User user, String bucket) {
@@ -43,12 +49,12 @@ public class AmazonServiceImpl implements AmazonService {
     }
 
     @Override
-    public boolean checkObjectInEveryBuckets(User user) {
+    public List<S3Bucket> checkObjectInEveryBuckets(User user) {
         try {
-            return aws.buckets().entrySet().stream().anyMatch(entry -> s3.checkObjectIsExists(user, entry.getValue()));
+            return aws.buckets().values().stream().filter(s -> s3.checkObjectIsExists(user, s)).map(S3Bucket::from).collect(Collectors.toList());
         } catch (S3Exception e) {
             log.error(e.getMessage());
-            return false;
+            return List.of();
         }
     }
 
@@ -63,12 +69,12 @@ public class AmazonServiceImpl implements AmazonService {
     }
 
     @Override
-    public boolean checkObjectInEveryBuckets(String key) {
+    public List<S3Bucket> checkObjectInEveryBuckets(String key) {
         try {
-            return aws.buckets().entrySet().stream().anyMatch(entry -> s3.checkObjectIsExists(key, entry.getValue()));
+            return aws.buckets().values().stream().filter(s -> s3.checkObjectIsExists(key, s)).map(S3Bucket::from).collect(Collectors.toList());
         } catch (S3Exception e) {
             log.error(e.getMessage());
-            return false;
+            return List.of();
         }
     }
 
@@ -78,18 +84,15 @@ public class AmazonServiceImpl implements AmazonService {
     }
 
     @Override
-    public boolean deleteObject(User user, String path) {
-        // TODO: Separate deleteObject method (soft and hard)
-        boolean isExists = this.checkObjectInEveryBuckets(path);
-        if (!isExists) {
-            return false;
-        }
+    public boolean softDeleteObject(User user, String path) {
+        aws.buckets().forEach((key, bucket) -> s3.softDelete(path, bucket));
 
-        Pattern pattern = Pattern.compile("^/" + user.get_id(), Pattern.CASE_INSENSITIVE);
-        if (!pattern.matcher(path).find()) {
-            return false;
-        }
-        aws.buckets().forEach((key, bucket) -> s3.deleteObject(path, bucket, true));
+        return true;
+    }
+
+    @Override
+    public boolean hardDeleteObject(User user, String path) {
+        aws.buckets().forEach((key, bucket) -> s3.hardDelete(path, bucket));
 
         return true;
     }
@@ -124,6 +127,11 @@ public class AmazonServiceImpl implements AmazonService {
 
         log.debug("Done");
         return Uni.createFrom().voidItem();
+    }
+
+    @Override
+    public void issueToken(User user) {
+        cognito.issueToken(user);
     }
 
 }

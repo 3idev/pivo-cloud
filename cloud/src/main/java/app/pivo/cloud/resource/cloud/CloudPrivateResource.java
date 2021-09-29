@@ -9,6 +9,7 @@ import io.vertx.core.http.HttpServerRequest;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -35,8 +36,8 @@ public class CloudPrivateResource {
     }
 
     @DELETE
-    @Path("soft-delete")
-    public Response softDeleteObject(CloudPrivateDTO.SoftDeleteObject payload) throws Exception {
+    @Path("soft")
+    public Response softDeleteObject(@BeanParam @Valid CloudPrivateDTO.SoftDeleteObject payload) throws Exception {
         User user = (User) ctx.getUserPrincipal();
         this.service.softDeleteObject(user, payload.getPath());
 
@@ -44,12 +45,18 @@ public class CloudPrivateResource {
     }
 
     @DELETE
-    @Path("hard-delete")
-    public Response hardDeleteObject(CloudPrivateDTO.HardDeleteObject payload) throws Exception {
+    @Path("hard")
+    public Response hardDeleteObject(@BeanParam @Valid CloudPrivateDTO.HardDeleteObject payload) throws Exception {
         User user = (User) ctx.getUserPrincipal();
         this.service.hardDeleteObject(user, payload.getPath());
 
         return ApiResponse.from("OK");
+    }
+
+    @POST
+    @Path("restore")
+    public Response restoreObject() throws Exception {
+        return ApiResponse.from("NotImplementYet");
     }
 
 }

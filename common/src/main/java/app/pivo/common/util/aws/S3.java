@@ -4,7 +4,6 @@ import app.pivo.common.entity.User;
 import app.pivo.common.util.CommonPattern;
 import app.pivo.common.util.PivoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.jboss.resteasy.spi.NotImplementedYetException;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -89,7 +88,18 @@ public class S3 {
      * @param bucket bucket name
      */
     public void hardDelete(String key, String bucket) {
-        throw new NotImplementedYetException();
+        if (!CommonPattern.ARCHIVED_MEDIA_FOLDER.matcher(key).find()) {
+            throw new IllegalArgumentException("Only can delete object in archived folder");
+        }
+
+        try (S3Client client = generateClient(bucket)) {
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .key(key).bucket(bucket).build();
+
+            DeleteObjectResponse res = client.deleteObject(deleteObjectRequest);
+
+            log.debug("DeleteObjectResponse: {}", res);
+        }
     }
 
     /**
@@ -143,12 +153,7 @@ public class S3 {
      * @param bucket   bucket name
      * @param safeMode If it's true, only can delete object in archived folder
      */
-    public void deleteObject(String key, String bucket, boolean safeMode) {
-        if (safeMode) {
-            if (!CommonPattern.ARCHIVED_MEDIA_FOLDER.matcher(key).find()) {
-                throw new IllegalArgumentException("When safeMode is true, only can delete object in archived folder");
-            }
-        }
+    public void deleteObject(String key, String bucket) {
         log.debug("Delete {} object", key);
         try (S3Client client = generateClient(bucket)) {
             this.deleteObject(key, bucket, client);
