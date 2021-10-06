@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @ApplicationScoped
-public class S3 {
+public class S3 extends AbstractAWSClient<S3Client> {
 
     @Inject
     PivoUtils utils;
@@ -151,7 +151,6 @@ public class S3 {
      *
      * @param key      object path
      * @param bucket   bucket name
-     * @param safeMode If it's true, only can delete object in archived folder
      */
     public void deleteObject(String key, String bucket) {
         log.debug("Delete {} object", key);
@@ -186,7 +185,7 @@ public class S3 {
         return ByteBuffer.wrap(b);
     }
 
-    private S3Client generateClient(String bucket) {
+    protected S3Client generateClient(String bucket) {
         return S3Client.builder().region(utils.getRegionFromBucket(bucket))
                 .credentialsProvider(ProfileCredentialsProvider.create("dev")).build();
     }

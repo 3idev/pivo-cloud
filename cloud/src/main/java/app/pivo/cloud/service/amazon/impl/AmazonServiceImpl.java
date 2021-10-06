@@ -1,13 +1,15 @@
 package app.pivo.cloud.service.amazon.impl;
 
+import app.pivo.cloud.define.S3Bucket;
 import app.pivo.cloud.service.amazon.AmazonService;
-import app.pivo.common.define.S3Bucket;
-import app.pivo.common.domain.PreSignedURL;
+import app.pivo.common.domain.CognitoToken;
+import app.pivo.common.entity.CognitoAccount;
 import app.pivo.common.entity.User;
+import app.pivo.common.repository.CognitoAccountRepository;
 import app.pivo.common.util.aws.AWSProperty;
 import app.pivo.common.util.aws.Cognito;
+import app.pivo.common.util.aws.CognitoUtils;
 import app.pivo.common.util.aws.S3;
-import app.pivo.common.util.aws.S3PreSignerClient;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,10 +33,10 @@ public class AmazonServiceImpl implements AmazonService {
     S3 s3;
 
     @Inject
-    S3PreSignerClient presignedClient;
+    Cognito cognito;
 
     @Inject
-    Cognito cognito;
+    CognitoAccountRepository cognitoAccountRepository;
 
     @Override
     public boolean checkObject(User user, String bucket) {
@@ -78,10 +81,10 @@ public class AmazonServiceImpl implements AmazonService {
         }
     }
 
-    @Override
-    public PreSignedURL makePreSignedURL(User user, String bucket) {
-        return presignedClient.generatePreSignedURL(user, bucket);
-    }
+//    @Override
+//    public CognitoToken makePreSignedURL(User user, String bucket) {
+//        return presignedClient.generatePreSignedURL(user, bucket);
+//    }
 
     @Override
     public boolean softDeleteObject(User user, String path) {
@@ -98,40 +101,58 @@ public class AmazonServiceImpl implements AmazonService {
     }
 
     @Override
-    public void initializeUserResource(User user, String bucket) {
-        Uni.createFrom().voidItem().emitOn(Infrastructure.getDefaultWorkerPool()).subscribe().with(ignore -> this.initializeUserResourceWorker(user, bucket));
+    public void initializeUserResource(String prefix, String bucket) {
+        Uni.createFrom().voidItem().emitOn(Infrastructure.getDefaultWorkerPool()).subscribe().with(ignore -> this.initializeUserResourceWorker(prefix, bucket));
     }
 
-    private Uni<Void> initializeUserResourceWorker(User user, String bucket) {
+    @Override
+    public CognitoAccount createCognitoAccount(User user) {
+        CognitoToken res = this.issueToken(user);
+
+        Optional<CognitoAccount> maybeCloudAccount = cognitoAccountRepository.findByUserIdOptional(user.get_id());
+        if (maybeCloudAccount.isEmpty()) {
+            CognitoAccount cognitoAccount = CognitoAccount.builder()
+                    .cognitoId(res.getIdentityId())
+                    .userId(user.get_id())
+                    .build();
+            cognitoAccountRepository.persist(cognitoAccount);
+
+            return cognitoAccount;
+        }
+
+        return maybeCloudAccount.get();
+    }
+
+    @Override
+    public CognitoToken issueToken(User user) {
+        return cognito.issueToken(user);
+    }
+
+    private Uni<Void> initializeUserResourceWorker(String root, String bucket) {
         log.debug("Start to make folders");
         try {
             // Create root folder for user
             log.debug("Making root folder");
-            s3.createFolder(user.transformToObjectKey(), bucket);
+            s3.createFolder(CognitoUtils.pathResolve(root), bucket);
             // Create images folder
             log.debug("Making image folder");
-            s3.createFolder(user.transformToObjectKey("images"), bucket);
+            s3.createFolder(CognitoUtils.pathResolve(root, "images"), bucket);
             // Create videos folder
             log.debug("Making video folder");
-            s3.createFolder(user.transformToObjectKey("videos"), bucket);
+            s3.createFolder(CognitoUtils.pathResolve(root, "videos"), bucket);
             // Create archive folder
             log.debug("Making archive root folder");
-            s3.createFolder(user.transformToObjectKey("archived"), bucket);
+            s3.createFolder(CognitoUtils.pathResolve(root, "archived"), bucket);
             log.debug("Making image folder in archive folder");
-            s3.createFolder(user.transformToObjectKey("archived", "images"), bucket);
+            s3.createFolder(CognitoUtils.pathResolve(root, "archived", "images"), bucket);
             log.debug("Making video folder in archive folder");
-            s3.createFolder(user.transformToObjectKey("archived", "videos"), bucket);
+            s3.createFolder(CognitoUtils.pathResolve(root, "archived", "videos"), bucket);
         } catch (Exception ignore) {
             log.error("Failed to make default folders");
         }
 
-        log.debug("Done");
+        log.debug("initializeUserResource is Done");
         return Uni.createFrom().voidItem();
-    }
-
-    @Override
-    public void issueToken(User user) {
-        cognito.issueToken(user);
     }
 
 }

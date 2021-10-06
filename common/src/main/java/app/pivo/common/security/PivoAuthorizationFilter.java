@@ -64,7 +64,6 @@ public class PivoAuthorizationFilter implements ContainerRequestFilter {
                     boolean pass = permissions.stream().anyMatch(current::equals);
                     if (!pass) {
                         ctx.abortWith(javax.ws.rs.core.Response.status(403).entity(this.FORBIDDEN).build());
-                        return;
                     }
                 }
             } catch (Exception e) {

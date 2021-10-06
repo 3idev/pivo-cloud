@@ -1,4 +1,4 @@
-package app.pivo.common.define;
+package app.pivo.cloud.define;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

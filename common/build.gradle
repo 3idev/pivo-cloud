@@ -3,7 +3,5 @@ plugins {
     id 'io.quarkus'
 }
 dependencies {
-    implementation 'io.quarkus:quarkus-mongodb-panache'
-
     implementation 'com.auth0:java-jwt:3.18.2'
 }

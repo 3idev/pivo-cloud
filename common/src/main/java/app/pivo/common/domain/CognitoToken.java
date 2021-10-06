@@ -7,10 +7,11 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class PreSignedURL {
+public class CognitoToken {
 
-    private String get;
-    private String put;
+    private String identityId;
+
+    private String token;
 
     private Long ttl;
 

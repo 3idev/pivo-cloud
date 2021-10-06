@@ -7,6 +7,7 @@ public enum RedisPrefix {
 
     S3_GET("S3_GET"),
     S3_PUT("S3_PUT"),
+    COGNITO("COGNITO"),
     NONE("");
 
     private String name;

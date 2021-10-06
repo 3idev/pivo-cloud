@@ -49,6 +49,7 @@ subprojects {
         implementation 'io.quarkus:quarkus-rest-client-jackson'
         implementation 'io.quarkus:quarkus-redis-client'
         implementation 'io.quarkus:quarkus-hibernate-validator'
+        implementation 'io.quarkus:quarkus-mongodb-panache'
 
         implementation 'org.mindrot.bcrypt:bcrypt:0.3'
 

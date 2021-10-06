@@ -1,7 +1,8 @@
 package app.pivo.cloud.service.amazon;
 
-import app.pivo.common.define.S3Bucket;
-import app.pivo.common.domain.PreSignedURL;
+import app.pivo.cloud.define.S3Bucket;
+import app.pivo.common.domain.CognitoToken;
+import app.pivo.common.entity.CognitoAccount;
 import app.pivo.common.entity.User;
 
 import java.util.List;
@@ -16,14 +17,16 @@ public interface AmazonService {
 
     List<S3Bucket> checkObjectInEveryBuckets(String key);
 
-    PreSignedURL makePreSignedURL(User user, String bucket) throws Exception;
+//    CognitoToken makePreSignedURL(User user, String bucket) throws Exception;
 
     boolean softDeleteObject(User user, String path) throws Exception;
 
     boolean hardDeleteObject(User user, String path) throws Exception;
 
-    void initializeUserResource(User user, String bucket);
+    void initializeUserResource(String prefix, String bucket);
 
-    void issueToken(User user);
+    CognitoAccount createCognitoAccount(User user);
+
+    CognitoToken issueToken(User user);
 
 }
