@@ -35,28 +35,18 @@ public class CloudPrivateResource {
         return ApiResponse.from(service.createCognitoURL(user, IPUtils.getRemoteIP(request)));
     }
 
-    @DELETE
-    @Path("soft")
-    public Response softDeleteObject(@BeanParam @Valid CloudPrivateDTO.SoftDeleteObject payload) throws Exception {
-        User user = (User) ctx.getUserPrincipal();
-        this.service.softDeleteObject(user, payload.getPath());
-
-        return ApiResponse.from("OK");
-    }
-
-    @DELETE
-    @Path("hard")
-    public Response hardDeleteObject(@BeanParam @Valid CloudPrivateDTO.HardDeleteObject payload) throws Exception {
-        User user = (User) ctx.getUserPrincipal();
-        this.service.hardDeleteObject(user, payload.getPath());
-
-        return ApiResponse.from("OK");
-    }
-
     @POST
-    @Path("restore")
-    public Response restoreObject() throws Exception {
-        return ApiResponse.from("NotImplementYet");
+    @Path("share")
+    public Response makeShareableURL(@Valid CloudPrivateDTO.MakeShareableURL payload) throws Exception {
+        User user = (User) ctx.getUserPrincipal();
+        return ApiResponse.from(
+                service.makeShareableURL(
+                        user,
+                        payload.getPath(),
+                        payload.getTtl(),
+                        payload.getLocation()
+                )
+        );
     }
 
 }

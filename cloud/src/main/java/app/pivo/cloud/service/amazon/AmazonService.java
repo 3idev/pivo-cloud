@@ -15,7 +15,7 @@ public interface AmazonService {
 
     boolean checkObject(String key, String bucket);
 
-    List<S3Bucket> checkObjectInEveryBuckets(String key);
+    boolean checkObjectInEveryBuckets(String key);
 
 //    CognitoToken makePreSignedURL(User user, String bucket) throws Exception;
 

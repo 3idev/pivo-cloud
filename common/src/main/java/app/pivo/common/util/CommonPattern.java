@@ -15,8 +15,8 @@ public interface CommonPattern {
      * $2 = images or videos
      * $3 = file name
      */
-    Pattern MEDIA_FOLDER = Pattern.compile("^/(" + UUID_STR + ")/(images|videos)/(.*)$", Pattern.CASE_INSENSITIVE);
-    String MEDIA_FOLDER_STR = "^/(" + UUID_STR + ")/(images|videos)/(.*)$";
+    Pattern MEDIA_FOLDER = Pattern.compile("^/((.*):" + UUID_STR + ")/(images|videos)/(.*)$", Pattern.CASE_INSENSITIVE);
+    String MEDIA_FOLDER_STR = "^/((.*):" + UUID_STR + ")/(images|videos)/(.*)$";
 
     /**
      * $1 = User uuid
@@ -24,7 +24,7 @@ public interface CommonPattern {
      * $3 = images or videos
      * $4 = file name
      */
-    Pattern ARCHIVED_MEDIA_FOLDER = Pattern.compile("^/(" + UUID_STR + ")/(archived)/(images|videos)/(.*)$", Pattern.CASE_INSENSITIVE);
-    String ARCHIVED_MEDIA_FOLDER_STR = "^/(" + UUID_STR + ")/(archived)/(images|videos)/(.*)$";
+    Pattern ARCHIVED_MEDIA_FOLDER = Pattern.compile("^/((.*):" + UUID_STR + ")/(archived)/(images|videos)/(.*)$", Pattern.CASE_INSENSITIVE);
+    String ARCHIVED_MEDIA_FOLDER_STR = "^/((.*):" + UUID_STR + ")/(archived)/(images|videos)/(.*)$";
 
 }

@@ -1,4 +1,4 @@
-package app.pivo.common.domain;
+package app.pivo.cloud.domain;
 
 import lombok.*;
 
@@ -7,7 +7,10 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class URLWithTTL {
+public class PreSignedURL {
+
     private String url;
+
     private Long ttl;
+
 }

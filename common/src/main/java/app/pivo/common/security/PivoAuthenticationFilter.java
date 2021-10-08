@@ -3,12 +3,11 @@ package app.pivo.common.security;
 import app.pivo.common.define.ApiErrorCode;
 import app.pivo.common.entity.Token;
 import app.pivo.common.exception.InvalidJwtTokenException;
-import app.pivo.common.repository.RedisRepository;
 import app.pivo.common.repository.TokenRepository;
 import app.pivo.common.response.ApiErrorResponse;
 import app.pivo.common.service.token.TokenService;
 import io.vertx.core.http.HttpServerRequest;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -23,6 +22,7 @@ import javax.ws.rs.ext.Providers;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class PivoAuthenticationFilter implements ContainerRequestFilter {
@@ -43,7 +43,8 @@ public class PivoAuthenticationFilter implements ContainerRequestFilter {
     HttpServerRequest request;
 
     private final Pattern PUBLIC_REGEX = Pattern.compile("^/(.*)/p/(.*)$");
-//    private final Pattern ADMIN_REGEX = Pattern.compile("^/(.*)/a/(.*)$");
+    //    private final Pattern ADMIN_REGEX = Pattern.compile("^/(.*)/a/(.*)$");
+
     private final ApiErrorResponse NOT_AUTHORIZED = new ApiErrorResponse(ApiErrorCode.NOT_AUTHORIZED.getCode(), ApiErrorCode.NOT_AUTHORIZED.getMsg());
     private final ApiErrorResponse INVALID_TOKEN = new ApiErrorResponse(ApiErrorCode.INVALID_TOKEN.getCode(), ApiErrorCode.INVALID_TOKEN.getMsg());
 
@@ -70,7 +71,7 @@ public class PivoAuthenticationFilter implements ContainerRequestFilter {
 
                     Token token = maybeToken.get();
                     ctx.setSecurityContext(UserContext.builder()
-                            .user(token.getUser())
+                            .user(token.getUser().convert())
                             .build()
                     );
                 }

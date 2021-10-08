@@ -4,7 +4,7 @@ import app.pivo.common.define.UserLocation;
 import lombok.*;
 
 import javax.validation.constraints.NotBlank;
-import javax.ws.rs.QueryParam;
+import javax.validation.constraints.Positive;
 
 public class CloudPrivateDTO {
 
@@ -13,31 +13,49 @@ public class CloudPrivateDTO {
     @ToString
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class SoftDeleteObject {
+    public static class MakeShareableURL {
 
-        @QueryParam("path")
-        @NotBlank(message = "path may no be blank")
+        @NotBlank(message = "path may not be empty")
         private String path;
 
-        @QueryParam("deleteAfter")
-        private Long deleteAfter;
+        @NotBlank(message = "ttl may not be empty")
+        @Positive(message = "ttl only allow positive value")
+        private Long ttl;
 
-    }
-
-    @Data
-    @Builder
-    @ToString
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class HardDeleteObject {
-
-        @QueryParam("path")
-        @NotBlank(message = "path may not be blank")
-        private String path;
-
-        @QueryParam("location")
         private UserLocation location;
 
     }
+
+//    @Data
+//    @Builder
+//    @ToString
+//    @NoArgsConstructor
+//    @AllArgsConstructor
+//    public static class SoftDeleteObject {
+//
+//        @QueryParam("path")
+//        @NotBlank(message = "path may not be blank")
+//        private String path;
+//
+//        @QueryParam("deleteAfter")
+//        private Long deleteAfter;
+//
+//    }
+//
+//    @Data
+//    @Builder
+//    @ToString
+//    @NoArgsConstructor
+//    @AllArgsConstructor
+//    public static class HardDeleteObject {
+//
+//        @QueryParam("path")
+//        @NotBlank(message = "path may not be blank")
+//        private String path;
+//
+//        @QueryParam("location")
+//        private UserLocation location;
+//
+//    }
 
 }

@@ -40,7 +40,7 @@
 //    }
 //
 //    public CognitoToken generatePreSignedURL(User user, String bucketName) {
-//        return this.generatePreSignedURL(user.get_id(), bucketName);
+//        return this.generatePreSignedURL(user.getId(), bucketName);
 //    }
 //
 //    public CognitoToken generatePreSignedURL(String key, String bucketName) {

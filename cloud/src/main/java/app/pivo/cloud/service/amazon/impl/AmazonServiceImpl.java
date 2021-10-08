@@ -43,7 +43,7 @@ public class AmazonServiceImpl implements AmazonService {
         try {
             return s3.checkObjectIsExists(user, bucket);
         } catch (NoSuchKeyException e) {
-            log.warn("We can't find the key: {}", user.get_id());
+            log.warn("We can't find the key: {}", user.getId());
             return false;
         } catch (S3Exception e) {
             log.error(e.getMessage());
@@ -54,7 +54,12 @@ public class AmazonServiceImpl implements AmazonService {
     @Override
     public List<S3Bucket> checkObjectInEveryBuckets(User user) {
         try {
-            return aws.buckets().values().stream().filter(s -> s3.checkObjectIsExists(user, s)).map(S3Bucket::from).collect(Collectors.toList());
+            return aws.buckets()
+                    .values()
+                    .stream()
+                    .filter(s -> s3.checkObjectIsExists(user, s))
+                    .map(S3Bucket::from)
+                    .collect(Collectors.toList());
         } catch (S3Exception e) {
             log.error(e.getMessage());
             return List.of();
@@ -72,12 +77,14 @@ public class AmazonServiceImpl implements AmazonService {
     }
 
     @Override
-    public List<S3Bucket> checkObjectInEveryBuckets(String key) {
+    public boolean checkObjectInEveryBuckets(String key) {
         try {
-            return aws.buckets().values().stream().filter(s -> s3.checkObjectIsExists(key, s)).map(S3Bucket::from).collect(Collectors.toList());
+            return aws.buckets().values()
+                    .stream()
+                    .anyMatch(s -> s3.checkObjectIsExists(key, s));
         } catch (S3Exception e) {
             log.error(e.getMessage());
-            return List.of();
+            return false;
         }
     }
 
@@ -102,19 +109,25 @@ public class AmazonServiceImpl implements AmazonService {
 
     @Override
     public void initializeUserResource(String prefix, String bucket) {
-        Uni.createFrom().voidItem().emitOn(Infrastructure.getDefaultWorkerPool()).subscribe().with(ignore -> this.initializeUserResourceWorker(prefix, bucket));
+        Uni.createFrom()
+                .voidItem()
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .subscribe()
+                .with(ignore -> this.initializeUserResourceWorker(prefix, bucket));
     }
 
     @Override
     public CognitoAccount createCognitoAccount(User user) {
-        CognitoToken res = this.issueToken(user);
+        final CognitoToken res = this.issueToken(user);
 
-        Optional<CognitoAccount> maybeCloudAccount = cognitoAccountRepository.findByUserIdOptional(user.get_id());
+        Optional<CognitoAccount> maybeCloudAccount = cognitoAccountRepository.findByUserIdOptional(user.getId());
         if (maybeCloudAccount.isEmpty()) {
+            log.debug("Try to create CognitoAccount");
             CognitoAccount cognitoAccount = CognitoAccount.builder()
                     .cognitoId(res.getIdentityId())
-                    .userId(user.get_id())
+                    .userId(user.getId())
                     .build();
+            log.debug("CognitoAccount: {}", cognitoAccount.toString());
             cognitoAccountRepository.persist(cognitoAccount);
 
             return cognitoAccount;

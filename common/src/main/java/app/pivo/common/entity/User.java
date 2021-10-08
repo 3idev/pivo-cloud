@@ -16,11 +16,11 @@ import java.util.List;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@MongoEntity(collection="users")
+@MongoEntity(collection = "users")
 public class User implements Principal {
 
     @BsonId
-    public String _id;
+    private String id;
 
     private String username;
     private String email;
@@ -59,8 +59,8 @@ public class User implements Principal {
     private LocalDate lastLoginAttempt;
     private LocalDate lastLoginSuccess;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Override
     public String getName() {
@@ -72,13 +72,9 @@ public class User implements Principal {
         return Principal.super.implies(subject);
     }
 
-    public void setId(String id) {
-        this._id = id;
-    }
-
     public String transformToObjectKey(String... keys) {
-        StringBuilder sb = new StringBuilder(this._id ).append("/");
-        for (String key: keys) {
+        StringBuilder sb = new StringBuilder(this.id).append("/");
+        for (String key : keys) {
             sb.append(key).append("/");
         }
 

@@ -5,6 +5,7 @@ import app.pivo.common.service.token.TokenService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import org.jboss.resteasy.spi.NotImplementedYetException;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -42,6 +43,16 @@ public class JWTServiceImpl implements TokenService {
         }
 
         return true;
+    }
+
+    @Override
+    public String generateAccessToken() {
+        throw new NotImplementedYetException();
+    }
+
+    @Override
+    public String generateRefreshToken() {
+        throw new NotImplementedYetException();
     }
 
 }

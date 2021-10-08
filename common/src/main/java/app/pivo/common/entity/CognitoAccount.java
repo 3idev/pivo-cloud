@@ -17,12 +17,14 @@ public class CognitoAccount {
 
     @BsonId
     @Builder.Default
-    private String _id = UUID.randomUUID().toString();
+    private String id = UUID.randomUUID().toString();
 
     private String userId;
     private String cognitoId;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
 }

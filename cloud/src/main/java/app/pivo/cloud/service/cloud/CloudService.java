@@ -1,14 +1,14 @@
 package app.pivo.cloud.service.cloud;
 
+import app.pivo.cloud.domain.PreSignedURL;
+import app.pivo.common.define.UserLocation;
 import app.pivo.common.domain.CognitoToken;
 import app.pivo.common.entity.User;
 
 public interface CloudService {
 
-    CognitoToken createCognitoURL(User user, String ip) throws Exception;
+    CognitoToken createCognitoURL(User user, String ip);
 
-    void softDeleteObject(User user, String path) throws Exception;
-
-    void hardDeleteObject(User user, String path) throws Exception;
+    PreSignedURL makeShareableURL(User user, String path, Long ttl, UserLocation location) throws Exception;
 
 }

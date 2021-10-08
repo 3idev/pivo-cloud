@@ -8,4 +8,8 @@ public interface TokenService {
 
     boolean validate(String token) throws InvalidJwtTokenException;
 
+    String generateAccessToken();
+
+    String generateRefreshToken();
+
 }

@@ -30,16 +30,16 @@ public class Cognito {
     RedisRepository redis;
 
     public CognitoToken issueToken(User user) {
-        Response redisResponse = redis.get(RedisPrefix.COGNITO.getName(user.get_id()));
+        Response redisResponse = redis.get(RedisPrefix.COGNITO.getName(user.getId()));
         if (null != redisResponse) {
             try {
                 String[] infos = redisResponse.toString().split("/");
                 if (infos[0].isEmpty() || infos[1].isEmpty()) {
-                    redis.del(RedisPrefix.COGNITO.getName(user.get_id()));
+                    redis.del(RedisPrefix.COGNITO.getName(user.getId()));
                     log.debug("CognitoToken format is different");
                     throw new Exception("CognitoToken format is different");
                 }
-                long ttl = redis.ttl(RedisPrefix.COGNITO.getName(user.get_id()));
+                long ttl = redis.ttl(RedisPrefix.COGNITO.getName(user.getId()));
                 if (ttl > configuration.VALIDATE_TIME()) {
                     return CognitoToken.builder()
                             .identityId(infos[0])
@@ -60,13 +60,15 @@ public class Cognito {
                     .tokenDuration(configuration.TTL())
                     .build();
 
+            log.debug("user: {}", user);
             GetOpenIdTokenForDeveloperIdentityResponse res = client.getOpenIdTokenForDeveloperIdentity(request);
 
             log.debug("GetOpenIdTokenForDeveloperIdentityResponse: {}", res);
 
-            redis.setWithExpire(RedisPrefix.COGNITO.getName(user.get_id()), res.identityId() + "/" + res.token(), configuration.TTL());
+            redis.setWithExpire(RedisPrefix.COGNITO.getName(user.getId()), res.identityId() + "/" + res.token(), configuration.TTL());
 
             return CognitoToken.builder()
+                    .identityId(res.identityId())
                     .token(res.token())
                     .ttl(configuration.TTL())
                     .build();
@@ -76,6 +78,7 @@ public class Cognito {
     protected CognitoIdentityClient generateClient() {
         return CognitoIdentityClient.builder()
                 .region(Region.AP_NORTHEAST_2)
+                // TODO: Refactor credentialProvider
                 .credentialsProvider(ProfileCredentialsProvider.create("dev"))
                 .build();
     }
@@ -83,14 +86,14 @@ public class Cognito {
     private Map<String, String> generateLogins(User user) {
         Map<String, String> returnMap = new HashMap<>();
         {
-            returnMap.put(configuration.PROVIDER(), user.get_id()); // Set user's uuid as unique id for cognito
+            returnMap.put(configuration.PROVIDER(), user.getId()); // Set user's uuid as unique id for cognito
         }
 
         return returnMap;
     }
 
     private Map<String, String> generatePrincipalTags() {
-        String profile = ProfileManager.getActiveProfile();
+        final String profile = ProfileManager.getActiveProfile();
         Map<String, String> returnMap = new HashMap<>();
         {
             returnMap.put("environment", profile);
