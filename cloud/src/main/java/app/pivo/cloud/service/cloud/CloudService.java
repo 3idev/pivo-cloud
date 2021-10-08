@@ -1,8 +1,8 @@
 package app.pivo.cloud.service.cloud;
 
+import app.pivo.cloud.domain.CognitoToken;
 import app.pivo.cloud.domain.PreSignedURL;
 import app.pivo.common.define.UserLocation;
-import app.pivo.common.domain.CognitoToken;
 import app.pivo.common.entity.User;
 
 public interface CloudService {

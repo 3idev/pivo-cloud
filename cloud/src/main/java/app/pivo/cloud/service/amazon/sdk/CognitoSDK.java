@@ -1,7 +1,7 @@
-package app.pivo.common.util.aws;
+package app.pivo.cloud.service.amazon.sdk;
 
+import app.pivo.cloud.domain.CognitoToken;
 import app.pivo.common.define.RedisPrefix;
-import app.pivo.common.domain.CognitoToken;
 import app.pivo.common.entity.User;
 import app.pivo.common.repository.RedisRepository;
 import app.pivo.common.util.aws.configuration.CognitoConfiguration;
@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Slf4j
 @ApplicationScoped
-public class Cognito {
+public class CognitoSDK {
 
     @Inject
     CognitoConfiguration configuration;
@@ -35,7 +35,6 @@ public class Cognito {
             try {
                 String[] infos = redisResponse.toString().split("/");
                 if (infos[0].isEmpty() || infos[1].isEmpty()) {
-                    redis.del(RedisPrefix.COGNITO.getName(user.getId()));
                     log.debug("CognitoToken format is different");
                     throw new Exception("CognitoToken format is different");
                 }
@@ -48,6 +47,7 @@ public class Cognito {
                             .build();
                 }
             } catch (Exception ignore) {
+                redis.del(RedisPrefix.COGNITO.getName(user.getId()));
                 log.warn("Failed to get CognitoToken from redis");
             }
         }

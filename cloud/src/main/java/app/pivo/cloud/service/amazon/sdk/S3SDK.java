@@ -1,4 +1,4 @@
-package app.pivo.common.util.aws;
+package app.pivo.cloud.service.amazon.sdk;
 
 import app.pivo.common.entity.User;
 import app.pivo.common.util.CommonPattern;
@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @ApplicationScoped
-public class S3 extends AbstractAWSClient<S3Client> {
+public class S3SDK {
 
     @Inject
     PivoUtils utils;
@@ -149,8 +149,8 @@ public class S3 extends AbstractAWSClient<S3Client> {
      * <p>
      * use it very carefully
      *
-     * @param key      object path
-     * @param bucket   bucket name
+     * @param key    object path
+     * @param bucket bucket name
      */
     public void deleteObject(String key, String bucket) {
         log.debug("Delete {} object", key);
@@ -185,7 +185,7 @@ public class S3 extends AbstractAWSClient<S3Client> {
         return ByteBuffer.wrap(b);
     }
 
-    protected S3Client generateClient(String bucket) {
+    private S3Client generateClient(String bucket) {
         return S3Client.builder().region(utils.getRegionFromBucket(bucket))
                 .credentialsProvider(ProfileCredentialsProvider.create("dev")).build();
     }

@@ -1,7 +1,7 @@
 package app.pivo.common.util;
 
 import app.pivo.common.define.UserLocation;
-import app.pivo.common.util.aws.AWSProperty;
+import app.pivo.common.util.aws.configuration.AWSProperty;
 import software.amazon.awssdk.regions.Region;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -13,7 +13,8 @@ public class PivoUtils {
     @Inject
     AWSProperty property;
 
-    private PivoUtils() {}
+    private PivoUtils() {
+    }
 
     public Region getRegionFromBucket(String bucket) {
         if (bucket.contains("eu")) {

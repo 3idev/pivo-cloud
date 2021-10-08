@@ -1,4 +1,4 @@
-package app.pivo.common.util.aws;
+package app.pivo.common.util.aws.configuration;
 
 import io.smallrye.config.ConfigMapping;
 

@@ -1,4 +1,4 @@
-package app.pivo.common.domain;
+package app.pivo.cloud.domain;
 
 import lombok.*;
 

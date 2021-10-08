@@ -1,15 +1,17 @@
 package app.pivo.cloud.service.amazon.impl;
 
 import app.pivo.cloud.define.S3Bucket;
+import app.pivo.cloud.domain.CognitoToken;
+import app.pivo.cloud.domain.PreSignedURL;
 import app.pivo.cloud.service.amazon.AmazonService;
-import app.pivo.common.domain.CognitoToken;
+import app.pivo.cloud.service.amazon.sdk.CognitoSDK;
+import app.pivo.cloud.service.amazon.sdk.S3PreSignerSDK;
+import app.pivo.cloud.service.amazon.sdk.S3SDK;
+import app.pivo.cloud.utils.CognitoUtils;
 import app.pivo.common.entity.CognitoAccount;
 import app.pivo.common.entity.User;
 import app.pivo.common.repository.CognitoAccountRepository;
-import app.pivo.common.util.aws.AWSProperty;
-import app.pivo.common.util.aws.Cognito;
-import app.pivo.common.util.aws.CognitoUtils;
-import app.pivo.common.util.aws.S3;
+import app.pivo.common.util.aws.configuration.AWSProperty;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +32,13 @@ public class AmazonServiceImpl implements AmazonService {
     AWSProperty aws;
 
     @Inject
-    S3 s3;
+    S3SDK s3;
 
     @Inject
-    Cognito cognito;
+    CognitoSDK cognito;
+
+    @Inject
+    S3PreSignerSDK s3PreSigner;
 
     @Inject
     CognitoAccountRepository cognitoAccountRepository;
@@ -88,23 +93,9 @@ public class AmazonServiceImpl implements AmazonService {
         }
     }
 
-//    @Override
-//    public CognitoToken makePreSignedURL(User user, String bucket) {
-//        return presignedClient.generatePreSignedURL(user, bucket);
-//    }
-
     @Override
-    public boolean softDeleteObject(User user, String path) {
-        aws.buckets().forEach((key, bucket) -> s3.softDelete(path, bucket));
-
-        return true;
-    }
-
-    @Override
-    public boolean hardDeleteObject(User user, String path) {
-        aws.buckets().forEach((key, bucket) -> s3.hardDelete(path, bucket));
-
-        return true;
+    public PreSignedURL makePreSignedURL(String path, String bucket) {
+        return s3PreSigner.generatePreSignedURL(path, bucket);
     }
 
     @Override

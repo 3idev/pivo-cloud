@@ -23,8 +23,8 @@ public enum ApiErrorCode {
     USER_ALREADY_EXISTS(409, "api.user.already_exists", "user already exists"),
 
     // Cloud
-    OBJECT_NOT_FOUND(404, "api.cloud.object_not_found", "Unable to find that object"),
     CANNOT_SHARE_ARCHIVED_FILE(400, "api.cloud.cannot_share_archived_file", "Unable to share archived file"),
+    OBJECT_NOT_FOUND(404, "api.cloud.object_not_found", "Unable to find that object"),
     NOT_YOUR_RESOURCE(403, "api.cloud.not_your_resource", "This is not your resource.");
 
     private final int status;

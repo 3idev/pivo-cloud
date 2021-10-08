@@ -1,4 +1,4 @@
-package app.pivo.common.util.aws;
+package app.pivo.cloud.utils;
 
 import java.util.regex.Pattern;
 

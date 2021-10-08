@@ -61,6 +61,7 @@ public class PivoAuthenticationFilter implements ContainerRequestFilter {
                     tokenService.validate(tokenRaw);
                 } catch (InvalidJwtTokenException e) {
                     ctx.abortWith(Response.status(401).entity(INVALID_TOKEN).build());
+                    return;
                 }
                 if (null != tokenRaw) {
                     Optional<Token> maybeToken = tokenRepository.findByAccessTokenOptional(tokenRaw);

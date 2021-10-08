@@ -8,7 +8,6 @@ import app.pivo.common.response.ApiErrorResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.redis.client.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Priority;
@@ -17,6 +16,7 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
@@ -56,20 +56,20 @@ public class PivoAuthorizationFilter implements ContainerRequestFilter {
             User user = (User) securityContext.getUserPrincipal();
             try {
                 if (null != user) {
-                    Response res = redis.get(RedisPrefix.NONE.getName(user.getRoleId()));
+                    io.vertx.redis.client.Response res = redis.get(RedisPrefix.NONE.getName(user.getRoleId()));
 
                     List<String> permissions = om.readValue(res.toString(), new TypeReference<List<String>>() {
                     });
 
                     boolean pass = permissions.stream().anyMatch(current::equals);
                     if (!pass) {
-                        ctx.abortWith(javax.ws.rs.core.Response.status(403).entity(this.FORBIDDEN).build());
+                        ctx.abortWith(Response.status(403).entity(this.FORBIDDEN).build());
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error("error: {}", e.getMessage());
-                ctx.abortWith(javax.ws.rs.core.Response.status(500).entity(this.UNKNOWN).build());
+                ctx.abortWith(Response.status(500).entity(this.UNKNOWN).build());
             }
         }
     }

@@ -1,11 +1,12 @@
 package app.pivo.cloud.service.cloud.impl;
 
+import app.pivo.cloud.define.S3Bucket;
+import app.pivo.cloud.domain.CognitoToken;
 import app.pivo.cloud.domain.PreSignedURL;
 import app.pivo.cloud.service.amazon.AmazonService;
 import app.pivo.cloud.service.cloud.CloudService;
 import app.pivo.common.define.ApiErrorCode;
 import app.pivo.common.define.UserLocation;
-import app.pivo.common.domain.CognitoToken;
 import app.pivo.common.entity.CognitoAccount;
 import app.pivo.common.entity.User;
 import app.pivo.common.exception.ApiException;
@@ -75,11 +76,14 @@ public class CloudServiceImpl implements CloudService {
 
     @Override
     public PreSignedURL makeShareableURL(User user, String path, Long ttl, UserLocation location) throws Exception {
+        String bucket;
         boolean exist;
         if (null == location) {
             exist = amazonService.checkObjectInEveryBuckets(path);
+            bucket = S3Bucket.US.getName();
         } else {
-            exist = amazonService.checkObject(path, utils.locationToBucket(location));
+            bucket = utils.locationToBucket(location);
+            exist = amazonService.checkObject(path, bucket);
         }
 
         if (!exist) {
@@ -93,7 +97,6 @@ public class CloudServiceImpl implements CloudService {
         CognitoAccount cognitoAccount = maybeCognitoAccount.get();
 
         if (!path.startsWith(cognitoAccount.getCognitoId())) {
-            // TODO: Change error code
             throw new ApiException(ApiErrorCode.NOT_YOUR_RESOURCE);
         }
 
@@ -101,8 +104,9 @@ public class CloudServiceImpl implements CloudService {
             throw new ApiException(ApiErrorCode.CANNOT_SHARE_ARCHIVED_FILE);
         }
 
-        // TODO: Generate PreSignedURL
-        return null;
+        PreSignedURL preSignedURL = amazonService.makePreSignedURL(path, bucket);
+
+        return preSignedURL;
     }
 
 }
