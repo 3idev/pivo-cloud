@@ -1,12 +1,14 @@
 package app.pivo.cloud.service.amazon.sdk;
 
 import app.pivo.cloud.domain.PreSignedURL;
+import app.pivo.cloud.service.amazon.sdk.configuration.S3PreSignerConfiguration;
+import app.pivo.cloud.utils.CloudUtils;
 import app.pivo.common.define.RedisPrefix;
 import app.pivo.common.repository.RedisRepository;
-import app.pivo.common.util.PivoUtils;
-import app.pivo.common.util.aws.configuration.S3PreSignerConfiguration;
 import io.vertx.redis.client.Response;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
@@ -24,7 +26,7 @@ public class S3PreSignerSDK {
     RedisRepository redis;
 
     @Inject
-    PivoUtils utils;
+    CloudUtils utils;
 
     @Inject
     S3PreSignerConfiguration configuration;
@@ -33,8 +35,9 @@ public class S3PreSignerSDK {
     }
 
     public PreSignedURL generatePreSignedURL(String key, String bucketName) {
-        log.debug("bucket name: {}", bucketName);
-        try (S3Presigner client = S3Presigner.builder().region(utils.getRegionFromBucket(bucketName)).build()) {
+        Region region = utils.getRegionFromBucket(bucketName);
+        log.debug("bucket name: {}, region: {}", bucketName, region);
+        try (S3Presigner client = generateClient(region)) {
             PreSignedURL result = this.generateGetPreSignedURL(client, key, bucketName);
 
             return PreSignedURL.builder()
@@ -56,12 +59,14 @@ public class S3PreSignerSDK {
                             .ttl(ttl)
                             .build();
                 }
-                log.debug("TTL is almost expire, generate new one");
+                log.debug("TTL is almost expired, generate new one");
             } catch (Exception ignore) {
                 redis.del(RedisPrefix.S3_GET.getName(key, bucketName));
                 log.error("failed to get url from redis");
             }
         }
+
+        log.debug("Signing object...");
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
@@ -82,6 +87,13 @@ public class S3PreSignerSDK {
         return PreSignedURL.builder()
                 .url(url)
                 .ttl(configuration.TTL())
+                .build();
+    }
+
+    private S3Presigner generateClient(Region region) {
+        return S3Presigner.builder()
+                .region(region)
+                .credentialsProvider(ProfileCredentialsProvider.create("dev"))
                 .build();
     }
 

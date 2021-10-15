@@ -1,4 +1,4 @@
-package app.pivo.common.security;
+package app.pivo.common.filter.security;
 
 import app.pivo.common.define.ApiErrorCode;
 import app.pivo.common.entity.Token;

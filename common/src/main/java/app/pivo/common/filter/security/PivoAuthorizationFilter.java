@@ -1,4 +1,4 @@
-package app.pivo.common.security;
+package app.pivo.common.filter.security;
 
 import app.pivo.common.define.ApiErrorCode;
 import app.pivo.common.define.RedisPrefix;
@@ -51,7 +51,6 @@ public class PivoAuthorizationFilter implements ContainerRequestFilter {
         final String method = ctx.getMethod();
         final String current = method + path;
 
-        log.debug("path: {}, method: {}", path, method);
         if (!method.equalsIgnoreCase("OPTIONS")) {
             User user = (User) securityContext.getUserPrincipal();
             try {

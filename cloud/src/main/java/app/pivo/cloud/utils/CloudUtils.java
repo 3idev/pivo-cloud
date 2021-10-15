@@ -1,19 +1,21 @@
-package app.pivo.common.util;
+package app.pivo.cloud.utils;
 
-import app.pivo.common.define.UserLocation;
-import app.pivo.common.util.aws.configuration.AWSProperty;
+import app.pivo.cloud.define.UserLocation;
+import app.pivo.cloud.service.amazon.sdk.configuration.S3Configuration;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.regions.Region;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+@Slf4j
 @ApplicationScoped
-public class PivoUtils {
+public class CloudUtils {
 
     @Inject
-    AWSProperty property;
+    S3Configuration property;
 
-    private PivoUtils() {
+    private CloudUtils() {
     }
 
     public Region getRegionFromBucket(String bucket) {

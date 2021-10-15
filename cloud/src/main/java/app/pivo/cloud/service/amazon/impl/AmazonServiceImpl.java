@@ -7,11 +7,11 @@ import app.pivo.cloud.service.amazon.AmazonService;
 import app.pivo.cloud.service.amazon.sdk.CognitoSDK;
 import app.pivo.cloud.service.amazon.sdk.S3PreSignerSDK;
 import app.pivo.cloud.service.amazon.sdk.S3SDK;
-import app.pivo.cloud.utils.CognitoUtils;
+import app.pivo.cloud.service.amazon.sdk.configuration.S3Configuration;
+import app.pivo.cloud.utils.S3Utils;
 import app.pivo.common.entity.CognitoAccount;
 import app.pivo.common.entity.User;
 import app.pivo.common.repository.CognitoAccountRepository;
-import app.pivo.common.util.aws.configuration.AWSProperty;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class AmazonServiceImpl implements AmazonService {
 
     @Inject
-    AWSProperty aws;
+    S3Configuration aws;
 
     @Inject
     S3SDK s3;
@@ -38,7 +38,7 @@ public class AmazonServiceImpl implements AmazonService {
     CognitoSDK cognito;
 
     @Inject
-    S3PreSignerSDK s3PreSigner;
+    S3PreSignerSDK presigner;
 
     @Inject
     CognitoAccountRepository cognitoAccountRepository;
@@ -95,7 +95,7 @@ public class AmazonServiceImpl implements AmazonService {
 
     @Override
     public PreSignedURL makePreSignedURL(String path, String bucket) {
-        return s3PreSigner.generatePreSignedURL(path, bucket);
+        return presigner.generatePreSignedURL(path, bucket);
     }
 
     @Override
@@ -137,20 +137,20 @@ public class AmazonServiceImpl implements AmazonService {
         try {
             // Create root folder for user
             log.debug("Making root folder");
-            s3.createFolder(CognitoUtils.pathResolve(root), bucket);
+//            s3.createFolder(S3Utils.pathResolve(root), bucket);
             // Create images folder
             log.debug("Making image folder");
-            s3.createFolder(CognitoUtils.pathResolve(root, "images"), bucket);
+            s3.createFolder(S3Utils.pathResolve(root, "images"), bucket);
             // Create videos folder
             log.debug("Making video folder");
-            s3.createFolder(CognitoUtils.pathResolve(root, "videos"), bucket);
+//            s3.createFolder(S3Utils.pathResolve(root, "videos"), bucket);
             // Create archive folder
             log.debug("Making archive root folder");
-            s3.createFolder(CognitoUtils.pathResolve(root, "archived"), bucket);
+            s3.createFolder(S3Utils.pathResolve(root, "archived"), bucket);
             log.debug("Making image folder in archive folder");
-            s3.createFolder(CognitoUtils.pathResolve(root, "archived", "images"), bucket);
+            s3.createFolder(S3Utils.pathResolve(root, "archived", "images"), bucket);
             log.debug("Making video folder in archive folder");
-            s3.createFolder(CognitoUtils.pathResolve(root, "archived", "videos"), bucket);
+            s3.createFolder(S3Utils.pathResolve(root, "archived", "videos"), bucket);
         } catch (Exception ignore) {
             log.error("Failed to make default folders");
         }

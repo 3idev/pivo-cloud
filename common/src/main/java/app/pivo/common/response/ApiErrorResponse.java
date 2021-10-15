@@ -1,7 +1,7 @@
 package app.pivo.common.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.ToString;
 
 import java.io.Serializable;
 
@@ -13,8 +13,8 @@ public class ApiErrorResponse implements Serializable {
     @JsonProperty("isOk")
     private final boolean isOk = false;
 
-    private String code;
-    private String msg;
+    private final String code;
+    private final String msg;
 
     public ApiErrorResponse(String code, String msg) {
         this.code = code;

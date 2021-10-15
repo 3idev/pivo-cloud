@@ -1,8 +1,8 @@
 package app.pivo.cloud.service.amazon.sdk;
 
+import app.pivo.cloud.utils.CloudUtils;
 import app.pivo.common.entity.User;
 import app.pivo.common.util.CommonPattern;
-import app.pivo.common.util.PivoUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public class S3SDK {
 
     @Inject
-    PivoUtils utils;
+    CloudUtils utils;
 
     /**
      * @param user   user object
@@ -45,6 +45,7 @@ public class S3SDK {
             log.debug("HeadObjectResponse: {}", res.metadata());
             return res.hasMetadata();
         } catch (NoSuchKeyException e) {
+            log.debug("{} is not exist in {}", key, bucket);
             return false;
         }
     }

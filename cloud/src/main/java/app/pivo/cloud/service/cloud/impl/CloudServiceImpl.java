@@ -1,12 +1,14 @@
 package app.pivo.cloud.service.cloud.impl;
 
 import app.pivo.cloud.define.S3Bucket;
+import app.pivo.cloud.define.UserLocation;
 import app.pivo.cloud.domain.CognitoToken;
 import app.pivo.cloud.domain.PreSignedURL;
 import app.pivo.cloud.service.amazon.AmazonService;
 import app.pivo.cloud.service.cloud.CloudService;
+import app.pivo.cloud.utils.CloudUtils;
+import app.pivo.cloud.utils.S3Utils;
 import app.pivo.common.define.ApiErrorCode;
-import app.pivo.common.define.UserLocation;
 import app.pivo.common.entity.CognitoAccount;
 import app.pivo.common.entity.User;
 import app.pivo.common.exception.ApiException;
@@ -14,7 +16,6 @@ import app.pivo.common.repository.CognitoAccountRepository;
 import app.pivo.common.service.geoip.GeoIPService;
 import app.pivo.common.util.CommonPattern;
 import app.pivo.common.util.IPUtils;
-import app.pivo.common.util.PivoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.client.exception.ResteasyWebApplicationException;
 
@@ -36,7 +37,7 @@ public class CloudServiceImpl implements CloudService {
     CognitoAccountRepository cognitoAccountRepository;
 
     @Inject
-    PivoUtils utils;
+    CloudUtils utils;
 
     @Override
     public CognitoToken createCognitoURL(User user, String ip) {
@@ -75,36 +76,34 @@ public class CloudServiceImpl implements CloudService {
     }
 
     @Override
-    public PreSignedURL makeShareableURL(User user, String path, Long ttl, UserLocation location) throws Exception {
-        String bucket;
-        boolean exist;
-        if (null == location) {
-            exist = amazonService.checkObjectInEveryBuckets(path);
-            bucket = S3Bucket.US.getName();
-        } else {
-            bucket = utils.locationToBucket(location);
-            exist = amazonService.checkObject(path, bucket);
-        }
-
-        if (!exist) {
-            throw new ApiException(ApiErrorCode.OBJECT_NOT_FOUND);
-        }
-
+    public PreSignedURL makeShareableURL(User user, String path, UserLocation location) throws Exception {
         Optional<CognitoAccount> maybeCognitoAccount = cognitoAccountRepository.findByUserIdOptional(user.getId());
         if (maybeCognitoAccount.isEmpty()) {
             throw new ApiException(ApiErrorCode.USER_NOT_FOUND);
         }
         CognitoAccount cognitoAccount = maybeCognitoAccount.get();
 
-        if (!path.startsWith(cognitoAccount.getCognitoId())) {
-            throw new ApiException(ApiErrorCode.NOT_YOUR_RESOURCE);
+        String bucket;
+        boolean exist;
+        if (null == location) {
+            log.debug("User doesn't provide location, Searching in every buckets... {}", S3Utils.pathResolve(cognitoAccount.getCognitoId(), path));
+            exist = amazonService.checkObjectInEveryBuckets(S3Utils.pathResolve(cognitoAccount.getCognitoId(), path));
+            bucket = S3Bucket.US.getName();
+        } else {
+            bucket = utils.locationToBucket(location);
+            log.debug("User provide location, Search in {} bucket", bucket);
+            exist = amazonService.checkObject(S3Utils.pathResolve(cognitoAccount.getCognitoId(), path), bucket);
+        }
+
+        if (!exist) {
+            throw new ApiException(ApiErrorCode.OBJECT_NOT_FOUND);
         }
 
         if (CommonPattern.ARCHIVED_MEDIA_FOLDER.matcher(path).find()) {
             throw new ApiException(ApiErrorCode.CANNOT_SHARE_ARCHIVED_FILE);
         }
 
-        PreSignedURL preSignedURL = amazonService.makePreSignedURL(path, bucket);
+        PreSignedURL preSignedURL = amazonService.makePreSignedURL(S3Utils.pathResolve(cognitoAccount.getCognitoId(), path), bucket);
 
         return preSignedURL;
     }

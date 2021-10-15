@@ -1,10 +1,10 @@
 package app.pivo.cloud.service.amazon.sdk;
 
 import app.pivo.cloud.domain.CognitoToken;
+import app.pivo.cloud.service.amazon.sdk.configuration.CognitoConfiguration;
 import app.pivo.common.define.RedisPrefix;
 import app.pivo.common.entity.User;
 import app.pivo.common.repository.RedisRepository;
-import app.pivo.common.util.aws.configuration.CognitoConfiguration;
 import io.quarkus.runtime.configuration.ProfileManager;
 import io.vertx.redis.client.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +46,7 @@ public class CognitoSDK {
                             .ttl(ttl)
                             .build();
                 }
+                log.debug("TTL is almost expire, generate new one");
             } catch (Exception ignore) {
                 redis.del(RedisPrefix.COGNITO.getName(user.getId()));
                 log.warn("Failed to get CognitoToken from redis");
@@ -60,7 +61,6 @@ public class CognitoSDK {
                     .tokenDuration(configuration.TTL())
                     .build();
 
-            log.debug("user: {}", user);
             GetOpenIdTokenForDeveloperIdentityResponse res = client.getOpenIdTokenForDeveloperIdentity(request);
 
             log.debug("GetOpenIdTokenForDeveloperIdentityResponse: {}", res);

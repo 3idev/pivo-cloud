@@ -43,7 +43,6 @@ public class CloudPrivateResource {
                 service.makeShareableURL(
                         user,
                         payload.getPath(),
-                        payload.getTtl(),
                         payload.getLocation()
                 )
         );

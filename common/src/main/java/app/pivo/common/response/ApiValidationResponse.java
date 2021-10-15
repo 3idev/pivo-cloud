@@ -14,8 +14,8 @@ public class ApiValidationResponse implements Serializable {
     @JsonProperty("isOk")
     private final boolean isOk = false;
 
-    private String code;
-    private String msg;
+    private final String code;
+    private final String msg;
     private Set<Map<String, String>> errors = new HashSet<>();
 
     public ApiValidationResponse(String code, String msg) {
