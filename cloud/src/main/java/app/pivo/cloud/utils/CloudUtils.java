@@ -1,5 +1,6 @@
 package app.pivo.cloud.utils;
 
+import app.pivo.cloud.define.S3Bucket;
 import app.pivo.cloud.define.UserLocation;
 import app.pivo.cloud.service.amazon.sdk.configuration.S3Configuration;
 import lombok.extern.slf4j.Slf4j;
@@ -21,19 +22,28 @@ public class CloudUtils {
     public Region getRegionFromBucket(String bucket) {
         if (bucket.contains("eu")) {
             return Region.EU_CENTRAL_1;
-        } else {
-            return Region.US_EAST_1;
+        }
+        return Region.US_EAST_1;
+    }
+
+    public Region getRegionFromBucket(S3Bucket bucket) {
+        switch (bucket) {
+            case EU:
+                return Region.EU_CENTRAL_1;
+            default:
+            case US:
+                return Region.US_EAST_1;
         }
     }
 
-    public String locationToBucket(UserLocation location) {
+    public S3Bucket locationToBucket(UserLocation location) {
         switch (location) {
             case US:
-                return property.buckets().get("us");
+                return S3Bucket.from(property.buckets().get("us"));
             case EU:
-                return property.buckets().get("eu");
+                return S3Bucket.from(property.buckets().get("eu"));
             default:
-                return property.fallbackBucket();
+                return S3Bucket.from(property.fallbackBucket());
         }
     }
 

@@ -1,5 +1,6 @@
 package app.pivo.cloud.service.amazon.sdk;
 
+import app.pivo.cloud.define.S3Bucket;
 import app.pivo.cloud.domain.PreSignedURL;
 import app.pivo.cloud.service.amazon.sdk.configuration.S3PreSignerConfiguration;
 import app.pivo.cloud.utils.CloudUtils;
@@ -7,7 +8,6 @@ import app.pivo.common.define.RedisPrefix;
 import app.pivo.common.repository.RedisRepository;
 import io.vertx.redis.client.Response;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -20,7 +20,7 @@ import java.time.Duration;
 
 @Slf4j
 @ApplicationScoped
-public class S3PreSignerSDK {
+public class S3PreSignerSDK extends baseSDK {
 
     @Inject
     RedisRepository redis;
@@ -34,11 +34,11 @@ public class S3PreSignerSDK {
     private S3PreSignerSDK() {
     }
 
-    public PreSignedURL generatePreSignedURL(String key, String bucketName) {
-        Region region = utils.getRegionFromBucket(bucketName);
-        log.debug("bucket name: {}, region: {}", bucketName, region);
+    public PreSignedURL generatePreSignedURL(String key, S3Bucket bucket) {
+        Region region = utils.getRegionFromBucket(bucket.getName());
+        log.debug("bucket name: {}, region: {}", bucket.getName(), region);
         try (S3Presigner client = generateClient(region)) {
-            PreSignedURL result = this.generateGetPreSignedURL(client, key, bucketName);
+            PreSignedURL result = this.generateGetPreSignedURL(client, key, bucket.getName());
 
             return PreSignedURL.builder()
                     .url(result.getUrl())
@@ -93,7 +93,7 @@ public class S3PreSignerSDK {
     private S3Presigner generateClient(Region region) {
         return S3Presigner.builder()
                 .region(region)
-                .credentialsProvider(ProfileCredentialsProvider.create("dev"))
+                .credentialsProvider(this.generateCredentials())
                 .build();
     }
 

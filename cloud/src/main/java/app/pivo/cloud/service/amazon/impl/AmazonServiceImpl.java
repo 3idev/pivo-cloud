@@ -8,7 +8,6 @@ import app.pivo.cloud.service.amazon.sdk.CognitoSDK;
 import app.pivo.cloud.service.amazon.sdk.S3PreSignerSDK;
 import app.pivo.cloud.service.amazon.sdk.S3SDK;
 import app.pivo.cloud.service.amazon.sdk.configuration.S3Configuration;
-import app.pivo.cloud.utils.S3Utils;
 import app.pivo.common.entity.CognitoAccount;
 import app.pivo.common.entity.User;
 import app.pivo.common.repository.CognitoAccountRepository;
@@ -44,7 +43,7 @@ public class AmazonServiceImpl implements AmazonService {
     CognitoAccountRepository cognitoAccountRepository;
 
     @Override
-    public boolean checkObject(User user, String bucket) {
+    public boolean checkObject(User user, S3Bucket bucket) {
         try {
             return s3.checkObjectIsExists(user, bucket);
         } catch (NoSuchKeyException e) {
@@ -62,8 +61,8 @@ public class AmazonServiceImpl implements AmazonService {
             return aws.buckets()
                     .values()
                     .stream()
-                    .filter(s -> s3.checkObjectIsExists(user, s))
                     .map(S3Bucket::from)
+                    .filter(bucket -> s3.checkObjectIsExists(user, bucket))
                     .collect(Collectors.toList());
         } catch (S3Exception e) {
             log.error(e.getMessage());
@@ -72,7 +71,7 @@ public class AmazonServiceImpl implements AmazonService {
     }
 
     @Override
-    public boolean checkObject(String key, String bucket) {
+    public boolean checkObject(String key, S3Bucket bucket) {
         try {
             return s3.checkObjectIsExists(key, bucket);
         } catch (S3Exception e) {
@@ -82,24 +81,26 @@ public class AmazonServiceImpl implements AmazonService {
     }
 
     @Override
-    public boolean checkObjectInEveryBuckets(String key) {
+    public List<S3Bucket> checkObjectInEveryBuckets(String key) {
         try {
             return aws.buckets().values()
                     .stream()
-                    .anyMatch(s -> s3.checkObjectIsExists(key, s));
+                    .map(S3Bucket::from)
+                    .filter(bucket -> s3.checkObjectIsExists(key, bucket))
+                    .collect(Collectors.toList());
         } catch (S3Exception e) {
             log.error(e.getMessage());
-            return false;
+            return List.of();
         }
     }
 
     @Override
-    public PreSignedURL makePreSignedURL(String path, String bucket) {
+    public PreSignedURL makePreSignedURL(String path, S3Bucket bucket) {
         return presigner.generatePreSignedURL(path, bucket);
     }
 
     @Override
-    public void initializeUserResource(String prefix, String bucket) {
+    public void initializeUserResource(String prefix, S3Bucket bucket) {
         Uni.createFrom()
                 .voidItem()
                 .emitOn(Infrastructure.getDefaultWorkerPool())
@@ -132,27 +133,28 @@ public class AmazonServiceImpl implements AmazonService {
         return cognito.issueToken(user);
     }
 
-    private Uni<Void> initializeUserResourceWorker(String root, String bucket) {
+    private Uni<Void> initializeUserResourceWorker(String root, S3Bucket bucket) {
         log.debug("Start to make folders");
         try {
-            // Create root folder for user
-            log.debug("Making root folder");
+            this.s3.initializeUserResourceFolder(root, bucket);
+            // Make root folder for user
+//            log.debug("Making root folder");
 //            s3.createFolder(S3Utils.pathResolve(root), bucket);
-            // Create images folder
-            log.debug("Making image folder");
-            s3.createFolder(S3Utils.pathResolve(root, "images"), bucket);
-            // Create videos folder
-            log.debug("Making video folder");
+//            // Make images folder
+//            log.debug("Making image folder");
+//            s3.createFolder(S3Utils.pathResolve(root, "images"), bucket);
+//            // Make videos folder
+//            log.debug("Making video folder");
 //            s3.createFolder(S3Utils.pathResolve(root, "videos"), bucket);
-            // Create archive folder
-            log.debug("Making archive root folder");
-            s3.createFolder(S3Utils.pathResolve(root, "archived"), bucket);
-            log.debug("Making image folder in archive folder");
-            s3.createFolder(S3Utils.pathResolve(root, "archived", "images"), bucket);
-            log.debug("Making video folder in archive folder");
-            s3.createFolder(S3Utils.pathResolve(root, "archived", "videos"), bucket);
-        } catch (Exception ignore) {
-            log.error("Failed to make default folders");
+//            // Make archive folders
+//            log.debug("Making archive root folder");
+//            s3.createFolder(S3Utils.pathResolve(root, "archived"), bucket);
+//            log.debug("Making image folder in archive folder");
+//            s3.createFolder(S3Utils.pathResolve(root, "archived", "images"), bucket);
+//            log.debug("Making video folder in archive folder");
+//            s3.createFolder(S3Utils.pathResolve(root, "archived", "videos"), bucket);
+        } catch (Exception err) {
+            log.error("Failed to make default folders", err);
         }
 
         log.debug("initializeUserResource is Done");

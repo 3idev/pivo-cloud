@@ -8,7 +8,6 @@ import app.pivo.common.repository.RedisRepository;
 import io.quarkus.runtime.configuration.ProfileManager;
 import io.vertx.redis.client.Response;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentity.CognitoIdentityClient;
 import software.amazon.awssdk.services.cognitoidentity.model.GetOpenIdTokenForDeveloperIdentityRequest;
@@ -21,7 +20,7 @@ import java.util.Map;
 
 @Slf4j
 @ApplicationScoped
-public class CognitoSDK {
+public class CognitoSDK extends baseSDK {
 
     @Inject
     CognitoConfiguration configuration;
@@ -78,8 +77,7 @@ public class CognitoSDK {
     protected CognitoIdentityClient generateClient() {
         return CognitoIdentityClient.builder()
                 .region(Region.AP_NORTHEAST_2)
-                // TODO: Refactor credentialProvider
-                .credentialsProvider(ProfileCredentialsProvider.create("dev"))
+                .credentialsProvider(this.generateCredentials())
                 .build();
     }
 

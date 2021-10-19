@@ -63,8 +63,9 @@ public class CloudServiceImpl implements CloudService {
             cognitoAccount = maybeCognitoAccount.get();
         }
 
-        log.debug("checking {} is exists or not", cognitoAccount.getCognitoId());
+        log.debug("checking {} is exists or not", cognitoAccount.getCognitoId() + "/");
         boolean isExists = amazonService.checkObject(cognitoAccount.getCognitoId() + "/", utils.locationToBucket(location));
+        log.debug("isExists: {}", isExists);
         if (!isExists) {
             log.debug("initialize user resource");
             amazonService.initializeUserResource(cognitoAccount.getCognitoId(), utils.locationToBucket(location));
@@ -83,19 +84,8 @@ public class CloudServiceImpl implements CloudService {
         }
         CognitoAccount cognitoAccount = maybeCognitoAccount.get();
 
-        String bucket;
-        boolean exist;
-        if (null == location) {
-            log.debug("User doesn't provide location, Searching in every buckets... {}", S3Utils.pathResolve(cognitoAccount.getCognitoId(), path));
-            exist = amazonService.checkObjectInEveryBuckets(S3Utils.pathResolve(cognitoAccount.getCognitoId(), path));
-            bucket = S3Bucket.US.getName();
-        } else {
-            bucket = utils.locationToBucket(location);
-            log.debug("User provide location, Search in {} bucket", bucket);
-            exist = amazonService.checkObject(S3Utils.pathResolve(cognitoAccount.getCognitoId(), path), bucket);
-        }
-
-        if (!exist) {
+        S3Bucket bucket = location == null ? S3Bucket.US : utils.locationToBucket(location);
+        if (!amazonService.checkObject(S3Utils.pathResolve(cognitoAccount.getCognitoId(), path), bucket)) {
             throw new ApiException(ApiErrorCode.OBJECT_NOT_FOUND);
         }
 

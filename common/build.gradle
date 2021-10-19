@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'io.quarkus'
 }
+
 dependencies {
     implementation 'com.auth0:java-jwt:3.18.2'
+    testImplementation 'io.quarkus:quarkus-junit5'
 }

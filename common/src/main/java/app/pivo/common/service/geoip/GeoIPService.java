@@ -17,8 +17,10 @@ public class GeoIPService {
     @RestClient
     GeoIP geoIP;
 
+    private final String LOCAL_HOST = "127.0.0.1";
+
     public GeoIPResponse getLocation(String ip) throws ResteasyWebApplicationException {
-        if (ip.equalsIgnoreCase("127.0.0.1")) {
+        if (ip.equalsIgnoreCase(this.LOCAL_HOST)) {
             return GeoIPResponse.builder()
                     .continent_code("US")
                     .is_eu(false)

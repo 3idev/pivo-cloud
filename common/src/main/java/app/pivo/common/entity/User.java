@@ -59,7 +59,9 @@ public class User implements Principal {
     private LocalDate lastLoginAttempt;
     private LocalDate lastLoginSuccess;
 
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+    @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Override
@@ -80,4 +82,24 @@ public class User implements Principal {
 
         return sb.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof User)) {
+            return false;
+        }
+        User user = (User) o;
+        return user.id.equals(this.id) && user.email.equals(this.email);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = this.id.hashCode();
+        result = 31 * result + this.email.hashCode();
+        return result;
+    }
+
 }

@@ -23,12 +23,10 @@ public enum S3Bucket {
     }
 
     public static S3Bucket from(String str) {
-        Optional<S3Bucket> maybeBucket = Arrays.stream(S3Bucket.values()).filter(item -> {
-            if (item.name.equalsIgnoreCase(str)) {
-                return true;
-            }
-            return item.code.equalsIgnoreCase(str);
-        }).findFirst();
+        Optional<S3Bucket> maybeBucket = Arrays.stream(S3Bucket.values())
+                .filter(item -> {
+                    return item.name.equalsIgnoreCase(str) || item.code.equalsIgnoreCase(str);
+                }).findFirst();
         if (maybeBucket.isEmpty()) {
             throw new IllegalArgumentException();
         }

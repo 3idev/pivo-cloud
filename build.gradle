@@ -7,7 +7,7 @@ subprojects {
     repositories {
         mavenCentral()
         mavenLocal()
-        maven{
+        maven {
             url "https://nexus.bedatadriven.com/content/groups/public"
         }
     }
@@ -39,6 +39,7 @@ subprojects {
         implementation 'software.amazon.awssdk:kms'
         // --- AWS END ---
 
+        // --- QUARKUS ---
         implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
         implementation 'io.quarkus:quarkus-hibernate-validator'
         implementation 'io.quarkus:quarkus-resteasy'
@@ -50,10 +51,10 @@ subprojects {
         implementation 'io.quarkus:quarkus-redis-client'
         implementation 'io.quarkus:quarkus-hibernate-validator'
         implementation 'io.quarkus:quarkus-mongodb-panache'
+        // --- QUARKUS END ---
 
+        // --- OTHERS ---
         implementation 'org.mindrot.bcrypt:bcrypt:0.3'
-
-        testImplementation 'io.quarkus:quarkus-junit5'
         compileOnly 'org.projectlombok:lombok:1.18.20'
         annotationProcessor 'org.projectlombok:lombok:1.18.20'
 

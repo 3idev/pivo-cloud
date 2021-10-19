@@ -10,17 +10,17 @@ import java.util.List;
 
 public interface AmazonService {
 
-    boolean checkObject(User user, String bucket);
+    boolean checkObject(User user, S3Bucket bucket);
 
     List<S3Bucket> checkObjectInEveryBuckets(User user);
 
-    boolean checkObject(String key, String bucket);
+    boolean checkObject(String key, S3Bucket bucket);
 
-    boolean checkObjectInEveryBuckets(String key);
+    List<S3Bucket> checkObjectInEveryBuckets(String key);
 
-    PreSignedURL makePreSignedURL(String path, String bucket);
+    PreSignedURL makePreSignedURL(String path, S3Bucket bucket);
 
-    void initializeUserResource(String prefix, String bucket);
+    void initializeUserResource(String prefix, S3Bucket bucket);
 
     CognitoAccount createCognitoAccount(User user);
 

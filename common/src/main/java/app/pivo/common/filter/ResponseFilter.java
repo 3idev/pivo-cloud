@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.quarkus.runtime.configuration.ProfileManager;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.container.ContainerRequestContext;
@@ -21,6 +22,9 @@ public class ResponseFilter implements ContainerResponseFilter {
     @Context
     HttpServerRequest request;
 
+    @Context
+    HttpServerResponse response;
+
     private final ObjectMapper om;
 
     private final String profile = ProfileManager.getActiveProfile();
@@ -31,15 +35,22 @@ public class ResponseFilter implements ContainerResponseFilter {
     }
 
     @Override
-    public void filter(ContainerRequestContext ctx, ContainerResponseContext response) throws IOException {
-        final String uri = ctx.getUriInfo().getPath(true);
-        final String method = ctx.getMethod();
+    public void filter(ContainerRequestContext req, ContainerResponseContext res) throws IOException {
+        final String uri = req.getUriInfo().getPath(true);
+        final String method = req.getMethod();
         final String address = request.remoteAddress().toString();
 
-        if (response.hasEntity() && this.profile.equalsIgnoreCase("dev")) {
-            Object res = response.getEntity();
+        /* For prevent several MIME attack */
+        response.putHeader("Content-Security-Policy", "script-src 'self'");
+        response.putHeader("X-Content-Type-Options", "nosniff");
+        response.putHeader("X-XSS-Protection", "1;mode=block");
+        response.putHeader("Cache-Control", "no-cache");
+        response.putHeader("Pragma", "no-cache");
 
-            log.debug("\n{}", om.writeValueAsString(res));
+        if (res.hasEntity() && this.profile.equalsIgnoreCase("dev")) {
+            Object resObject = res.getEntity();
+
+            log.debug("\n{}", om.writeValueAsString(resObject));
         }
 
         log.info("{} request {} {} -->", IPUtils.formatIP(address), method, uri);

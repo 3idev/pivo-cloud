@@ -1,10 +1,11 @@
 package app.pivo.cloud.service.amazon.sdk;
 
+import app.pivo.cloud.define.S3Bucket;
 import app.pivo.cloud.utils.CloudUtils;
+import app.pivo.cloud.utils.S3Utils;
 import app.pivo.common.entity.User;
 import app.pivo.common.util.CommonPattern;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -12,11 +13,12 @@ import software.amazon.awssdk.services.s3.model.*;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 @Slf4j
 @ApplicationScoped
-public class S3SDK {
+public class S3SDK extends baseSDK {
 
     @Inject
     CloudUtils utils;
@@ -26,7 +28,7 @@ public class S3SDK {
      * @param bucket bucket name
      * @return is it exists or not
      */
-    public boolean checkObjectIsExists(User user, String bucket) {
+    public boolean checkObjectIsExists(User user, S3Bucket bucket) {
         return this.checkObjectIsExists(user.transformToObjectKey(), bucket);
     }
 
@@ -35,17 +37,18 @@ public class S3SDK {
      * @param bucket bucket name
      * @return is it exists or not
      */
-    public boolean checkObjectIsExists(String key, String bucket) {
+    public boolean checkObjectIsExists(String key, S3Bucket bucket) {
         log.debug("Finding {} key from {} bucket", key, bucket);
         try (S3Client client = generateClient(bucket)) {
-            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder().bucket(bucket).key(key).build();
+            HeadObjectResponse res = this.headObject(key, bucket, client);
 
-            HeadObjectResponse res = client.headObject(headObjectRequest);
-
-            log.debug("HeadObjectResponse: {}", res.metadata());
+            log.debug("checkObjectIsExists,hasMetadata: {}", res.hasMetadata());
             return res.hasMetadata();
         } catch (NoSuchKeyException e) {
             log.debug("{} is not exist in {}", key, bucket);
+            return false;
+        } catch (Exception e) {
+            log.error("", e);
             return false;
         }
     }
@@ -56,14 +59,28 @@ public class S3SDK {
      * @param key    folder path
      * @param bucket bucket name
      */
-    public void createFolder(String key, String bucket) {
+    public void createFolder(String key, S3Bucket bucket) {
         log.debug("Creating {} folder into {}", key, bucket);
         try (S3Client client = generateClient(bucket)) {
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(bucket).key(key).build();
-
-            PutObjectResponse res = client.putObject(putObjectRequest, RequestBody.fromByteBuffer(makeEmptyBuffer()));
+            PutObjectResponse res = this.putObject(key, bucket, this.makeEmptyBuffer(), client);
 
             log.debug("PutObjectResponse: {}", res);
+        }
+    }
+
+    public void initializeUserResourceFolder(String root, S3Bucket bucket) {
+        try (S3Client client = generateClient(bucket)) {
+            Arrays.asList(
+                    S3Utils.pathResolve(root)
+                    , S3Utils.pathResolve(root, "images")
+                    , S3Utils.pathResolve(root, "videos")
+                    , S3Utils.pathResolve(root, "archived")
+                    , S3Utils.pathResolve(root, "archived", "images")
+                    , S3Utils.pathResolve(root, "archived", "videos")
+            ).forEach(path -> {
+                log.debug("Make {} folder", path);
+                this.putObject(path, bucket, this.makeEmptyBuffer(), client);
+            });
         }
     }
 
@@ -73,7 +90,7 @@ public class S3SDK {
      * @param key    target path
      * @param bucket bucket name
      */
-    public void softDelete(String key, String bucket) {
+    public void softDelete(String key, S3Bucket bucket) {
         try (S3Client client = generateClient(bucket)) {
             String from = key;
             String to = convertPathToArchivedFolder(key);
@@ -88,14 +105,14 @@ public class S3SDK {
      * @param key    target object path
      * @param bucket bucket name
      */
-    public void hardDelete(String key, String bucket) {
+    public void hardDelete(String key, S3Bucket bucket) {
         if (!CommonPattern.ARCHIVED_MEDIA_FOLDER.matcher(key).find()) {
             throw new IllegalArgumentException("Only can delete object in archived folder");
         }
 
         try (S3Client client = generateClient(bucket)) {
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                    .key(key).bucket(bucket).build();
+                    .key(key).bucket(bucket.getName()).build();
 
             DeleteObjectResponse res = client.deleteObject(deleteObjectRequest);
 
@@ -110,7 +127,7 @@ public class S3SDK {
      * @param to     destination path
      * @param bucket bucket name
      */
-    public void moveObject(String from, String to, String bucket) {
+    public void moveObject(String from, String to, S3Bucket bucket) {
         try (S3Client client = generateClient(bucket)) {
             this.copyObject(from, to, bucket, client);
             this.deleteObject(from, bucket, client);
@@ -124,7 +141,7 @@ public class S3SDK {
      * @param to     destination path
      * @param bucket bucket name
      */
-    public void copyObject(String from, String to, String bucket) {
+    public void copyObject(String from, String to, S3Bucket bucket) {
         try (S3Client client = generateClient(bucket)) {
             this.copyObject(from, to, bucket, client);
         }
@@ -138,8 +155,13 @@ public class S3SDK {
      * @param bucket bucket name
      * @param client client
      */
-    private void copyObject(String from, String to, String bucket, S3Client client) {
-        CopyObjectRequest copyObjectRequest = CopyObjectRequest.builder().sourceBucket(bucket).sourceKey(from).destinationBucket(bucket).destinationKey(to).build();
+    private void copyObject(String from, String to, S3Bucket bucket, S3Client client) {
+        CopyObjectRequest copyObjectRequest = CopyObjectRequest.builder()
+                .sourceBucket(bucket.getName())
+                .sourceKey(from)
+                .destinationBucket(bucket.getName())
+                .destinationKey(to)
+                .build();
         CopyObjectResponse res = client.copyObject(copyObjectRequest);
 
         log.debug("CopyObjectResponse: {}", res);
@@ -153,7 +175,7 @@ public class S3SDK {
      * @param key    object path
      * @param bucket bucket name
      */
-    public void deleteObject(String key, String bucket) {
+    public void deleteObject(String key, S3Bucket bucket) {
         log.debug("Delete {} object", key);
         try (S3Client client = generateClient(bucket)) {
             this.deleteObject(key, bucket, client);
@@ -163,17 +185,45 @@ public class S3SDK {
     /**
      * !!!DANGEROUS!!!
      * <p>
-     * use it vert carefully
+     * use it very carefully
      *
      * @param key    target path
      * @param bucket bucket name
      * @param client client
      */
-    private void deleteObject(String key, String bucket, S3Client client) {
-        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder().bucket(bucket).key(key).build();
-        DeleteObjectResponse res = client.deleteObject(deleteObjectRequest);
+    private DeleteObjectResponse deleteObject(String key, S3Bucket bucket, S3Client client) {
+        DeleteObjectRequest request = DeleteObjectRequest.builder()
+                .bucket(bucket.getName())
+                .key(key)
+                .build();
+        DeleteObjectResponse response = client.deleteObject(request);
+        log.debug("DeleteObjectResponse: {}", response);
 
-        log.debug("DeleteObjectResponse: {}", res);
+        return response;
+    }
+
+    private HeadObjectResponse headObject(String key, S3Bucket bucket, S3Client client) throws NoSuchKeyException {
+        HeadObjectRequest request = HeadObjectRequest.builder()
+                .bucket(bucket.getName())
+                .key(key)
+                .build();
+
+        HeadObjectResponse response = client.headObject(request);
+        log.debug("HeadObjectResponse: {}", response);
+
+        return response;
+    }
+
+    private PutObjectResponse putObject(String key, S3Bucket bucket, ByteBuffer payload, S3Client client) {
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucket.getName())
+                .key(key)
+                .build();
+
+        PutObjectResponse response = client.putObject(request, RequestBody.fromByteBuffer(payload));
+        log.debug("PutObjectResponse: {}", response);
+
+        return response;
     }
 
     /**
@@ -186,12 +236,14 @@ public class S3SDK {
         return ByteBuffer.wrap(b);
     }
 
-    private S3Client generateClient(String bucket) {
-        return S3Client.builder().region(utils.getRegionFromBucket(bucket))
-                .credentialsProvider(ProfileCredentialsProvider.create("dev")).build();
+    private S3Client generateClient(S3Bucket bucket) {
+        return S3Client.builder()
+                .region(utils.getRegionFromBucket(bucket))
+                .credentialsProvider(this.generateCredentials())
+                .build();
     }
 
-    private String convertPathToArchivedFolder(String path) {
+    private String convertPathToArchivedFolder(String path) throws IllegalArgumentException {
         Pattern pattern = CommonPattern.MEDIA_FOLDER;
         if (!pattern.matcher(path).find()) {
             throw new IllegalArgumentException("It's not pivo cloud folder");
