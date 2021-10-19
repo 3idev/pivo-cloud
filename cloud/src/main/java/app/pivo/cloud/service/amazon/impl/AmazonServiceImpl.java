@@ -137,22 +137,6 @@ public class AmazonServiceImpl implements AmazonService {
         log.debug("Start to make folders");
         try {
             this.s3.initializeUserResourceFolder(root, bucket);
-            // Make root folder for user
-//            log.debug("Making root folder");
-//            s3.createFolder(S3Utils.pathResolve(root), bucket);
-//            // Make images folder
-//            log.debug("Making image folder");
-//            s3.createFolder(S3Utils.pathResolve(root, "images"), bucket);
-//            // Make videos folder
-//            log.debug("Making video folder");
-//            s3.createFolder(S3Utils.pathResolve(root, "videos"), bucket);
-//            // Make archive folders
-//            log.debug("Making archive root folder");
-//            s3.createFolder(S3Utils.pathResolve(root, "archived"), bucket);
-//            log.debug("Making image folder in archive folder");
-//            s3.createFolder(S3Utils.pathResolve(root, "archived", "images"), bucket);
-//            log.debug("Making video folder in archive folder");
-//            s3.createFolder(S3Utils.pathResolve(root, "archived", "videos"), bucket);
         } catch (Exception err) {
             log.error("Failed to make default folders", err);
         }
