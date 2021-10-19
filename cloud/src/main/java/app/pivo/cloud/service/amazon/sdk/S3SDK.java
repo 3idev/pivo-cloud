@@ -3,7 +3,6 @@ package app.pivo.cloud.service.amazon.sdk;
 import app.pivo.cloud.define.S3Bucket;
 import app.pivo.cloud.utils.CloudUtils;
 import app.pivo.cloud.utils.S3Utils;
-import app.pivo.common.entity.User;
 import app.pivo.common.util.CommonPattern;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -22,15 +21,6 @@ public class S3SDK extends baseSDK {
 
     @Inject
     CloudUtils utils;
-
-    /**
-     * @param user   user object
-     * @param bucket bucket name
-     * @return is it exists or not
-     */
-    public boolean checkObjectIsExists(User user, S3Bucket bucket) {
-        return this.checkObjectIsExists(user.transformToObjectKey(), bucket);
-    }
 
     /**
      * @param key    object path
@@ -111,12 +101,7 @@ public class S3SDK extends baseSDK {
         }
 
         try (S3Client client = generateClient(bucket)) {
-            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                    .key(key).bucket(bucket.getName()).build();
-
-            DeleteObjectResponse res = client.deleteObject(deleteObjectRequest);
-
-            log.debug("DeleteObjectResponse: {}", res);
+            this.deleteObject(key, bucket, client);
         }
     }
 

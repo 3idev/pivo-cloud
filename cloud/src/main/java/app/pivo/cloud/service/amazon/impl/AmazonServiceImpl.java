@@ -14,7 +14,6 @@ import app.pivo.common.repository.CognitoAccountRepository;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -41,34 +40,6 @@ public class AmazonServiceImpl implements AmazonService {
 
     @Inject
     CognitoAccountRepository cognitoAccountRepository;
-
-    @Override
-    public boolean checkObject(User user, S3Bucket bucket) {
-        try {
-            return s3.checkObjectIsExists(user, bucket);
-        } catch (NoSuchKeyException e) {
-            log.warn("We can't find the key: {}", user.getId());
-            return false;
-        } catch (S3Exception e) {
-            log.error(e.getMessage());
-            return false;
-        }
-    }
-
-    @Override
-    public List<S3Bucket> checkObjectInEveryBuckets(User user) {
-        try {
-            return aws.buckets()
-                    .values()
-                    .stream()
-                    .map(S3Bucket::from)
-                    .filter(bucket -> s3.checkObjectIsExists(user, bucket))
-                    .collect(Collectors.toList());
-        } catch (S3Exception e) {
-            log.error(e.getMessage());
-            return List.of();
-        }
-    }
 
     @Override
     public boolean checkObject(String key, S3Bucket bucket) {

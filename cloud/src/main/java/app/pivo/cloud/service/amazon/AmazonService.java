@@ -10,10 +10,6 @@ import java.util.List;
 
 public interface AmazonService {
 
-    boolean checkObject(User user, S3Bucket bucket);
-
-    List<S3Bucket> checkObjectInEveryBuckets(User user);
-
     boolean checkObject(String key, S3Bucket bucket);
 
     List<S3Bucket> checkObjectInEveryBuckets(String key);
