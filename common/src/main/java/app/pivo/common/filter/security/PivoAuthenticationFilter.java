@@ -71,9 +71,10 @@ public class PivoAuthenticationFilter implements ContainerRequestFilter {
                     }
 
                     Token token = maybeToken.get();
-                    ctx.setSecurityContext(UserContext.builder()
-                            .user(token.getUser().convert())
-                            .build()
+                    ctx.setSecurityContext(
+                            UserContext.builder()
+                                    .user(token.getUser().convert())
+                                    .build()
                     );
                 }
             }

@@ -14,6 +14,8 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Provider
@@ -29,6 +31,16 @@ public class ResponseFilter implements ContainerResponseFilter {
 
     private final String profile = ProfileManager.getActiveProfile();
 
+    private final Map<String, String> headers = new HashMap<>() {
+        {
+            put("Content-Security-Policy", "script-src 'self'");
+            put("X-Content-Type-Options", "nosniff");
+            put("X-XSS-Protection", "1;mode=block");
+            put("Cache-Control", "no-cache");
+            put("Pragma", "no-cache");
+        }
+    };
+
     public ResponseFilter() {
         this.om = new ObjectMapper();
         om.enable(SerializationFeature.INDENT_OUTPUT);
@@ -41,14 +53,12 @@ public class ResponseFilter implements ContainerResponseFilter {
         final String address = request.remoteAddress().toString();
 
         /* For prevent several MIME attack */
-        response.putHeader("Content-Security-Policy", "script-src 'self'");
-        response.putHeader("X-Content-Type-Options", "nosniff");
-        response.putHeader("X-XSS-Protection", "1;mode=block");
-        response.putHeader("Cache-Control", "no-cache");
-        response.putHeader("Pragma", "no-cache");
+        headers.forEach((key, value) -> {
+            response.putHeader(key, value);
+        });
 
         if (res.hasEntity() && this.profile.equalsIgnoreCase("dev")) {
-            Object resObject = res.getEntity();
+            final Object resObject = res.getEntity();
 
             log.debug("\n{}", om.writeValueAsString(resObject));
         }
